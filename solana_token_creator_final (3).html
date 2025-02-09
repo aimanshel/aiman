@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your own Solana SPL tokens easily with our simple and secure Solana Token Creator. Connect your wallet and manage tokens effortlessly.">
+    <meta name="keywords" content="Solana, SPL Token, Solana Token Creator, Crypto, Blockchain, Token Generator">
+    <meta name="author" content="Your Project Name">
+    <title>Solana Token Creator - Generate Your SPL Tokens</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background-color: #121826;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: linear-gradient(135deg, #1c2333, #293448);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: 0.2s;
+        }
+
+        .wallet-btn, .action-btn {
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            border: none;
+        }
+
+        .wallet-btn {
+            background-color: #3498db;
+            box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
+        }
+
+        .wallet-btn:hover {
+            background-color: #1d6fa5;
+        }
+
+        .action-btn {
+            background-color: #e74c3c;
+            box-shadow: 0px 4px 10px rgba(231, 76, 60, 0.4);
+        }
+
+        .action-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1c1f2b;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2);
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .popup h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .popup button {
+            background: none;
+            border: none;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+        }
+
+        .popup button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .popup .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            float: right;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔗 Solana Token Creator</h1>
+        <p>Create your Solana SPL tokens easily and efficiently.</p>
+        
+        <button class="wallet-btn" onclick="openWalletPopup()">Connect Wallet</button>
+        <p id="walletStatus">Wallet not connected</p>
+
+        <label for="tokenName">Token Name</label>
+        <input type="text" id="tokenName" placeholder="Enter token name">
+
+        <label for="tokenSymbol">Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
+
+        <label for="decimals">Decimals</label>
+        <input type="number" id="decimals" value="6">
+
+        <label for="supply">Total Supply</label>
+        <input type="number" id="supply" placeholder="Enter total supply">
+
+        <p><strong>Fees:</strong> Token Creation - 0.3 SOL | Revoke Freeze - 0.1 SOL | Revoke Mint - 0.1 SOL</p>
+
+        <div class="toggle-switch">
+            <span>Revoke Freeze Authority</span>
+            <input type="checkbox" id="revokeFreeze">
+        </div>
+
+        <div class="toggle-switch">
+            <span>Revoke Mint Authority</span>
+            <input type="checkbox" id="revokeMint">
+        </div>
+
+        <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
+        <p class="status-message" id="status"></p>
+
+        <!-- Instructions for usage -->
+        <div>
+            <h3>How to Use</h3>
+            <ol>
+                <li><strong>Connect Your Wallet:</strong> Click on the "Connect Wallet" button to connect your Phantom or Solflare wallet.</li>
+                <li><strong>Enter Token Details:</strong> Fill in the fields with the token name, symbol, decimals, and total supply.</li>
+                <li><strong>Check Your Balance:</strong> Ensure that your wallet has at least 0.3 SOL to cover the creation fee.</li>
+                <li><strong>Create Your Token:</strong> Once your wallet is connected and you have sufficient funds, click "Create Token" to create your token.</li>
+                <li><strong>Transaction Confirmation:</strong> You will receive a confirmation message once the token is created successfully!</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="popup" id="walletPopup">
+        <button class="close-btn" onclick="closeWalletPopup()">✖</button>
+        <h2>Connect a wallet on Solana</h2>
+        <button onclick="connectWallet('phantom')">🟣 Phantom</button>
+        <button onclick="connectWallet('solflare')">🔥 Solflare</button>
+    </div>
+
+    <script>
+        function openWalletPopup() {
+            document.getElementById("walletPopup").style.display = "block";
+        }
+
+        function closeWalletPopup() {
+            document.getElementById("walletPopup").style.display = "none";
+        }
+
+        async function connectWallet(walletType) {
+            let walletProvider;
+            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+                walletProvider = window.solana;
+            } else if (walletType === "solflare" && window.solflare) {
+                walletProvider = window.solflare;
+            } else {
+                alert(`Please install ${walletType} Wallet!`);
+                return;
+            }
+
+            try {
+                const response = await walletProvider.connect();
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                closeWalletPopup();
+            } catch (err) {
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+            }
+        }
+
+        async function createToken() {
+            if (!window.solana || !window.solana.isPhantom) {
+                alert("Please connect to Phantom Wallet!");
+                return;
+            }
+
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
+            const publicKey = window.solana.publicKey;
+            const balance = await connection.getBalance(publicKey);
+
+            const fee = 0.3 * 1e9; // 0.3 SOL بالـ lamports (1 SOL = 1e9 lamports)
+            if (balance < fee) {
+                alert("Insufficient funds! Please ensure you have at least 0.3 SOL to create the token.");
+                return;
+            }
+
+            // تحديد عنوان محفظتك الشخصية
+            const personalWalletAddress = 'HGF6MqYTrAViZTeRKStyLG81apiGaGz2GXg7Cw1n6n3V'; // عنوان محفظتك الشخصية
+
+            // إنشاء معاملة خصم الرسوم
+            const transaction = new solanaWeb3.Transaction().add(
+                solanaWeb3.SystemProgram.transfer({
+                    fromPubkey: publicKey,
+                    toPubkey: personalWalletAddress,  // إيداع الرسوم في محفظتك الشخصية
+                    lamports: fee, // 0.3 SOL بالـ lamports
+                })
+            );
+
+            try {
+                // إرسال المعاملة لتأكيد الخصم
+                const signature = await window.solana.signAndSendTransaction(transaction);
+                await connection.confirmTransaction(signature);
+
+                // إذا تم تنفيذ المعاملة بنجاح، يمكن الآن إنشاء التوكن
+                const mint = await solanaWeb3.Keypair.generate();
+                const token = await splToken.createMint(
+                    connection, window.solana, publicKey, null, 6 // الدقائق
+                );
+
+                alert(`Token ${document.getElementById("tokenName").value} created successfully!`);
+            } catch (error) {
+                alert("Transaction failed or was cancelled.");
+            }
+        }
+    </script>
+
+</body>
+</html>
