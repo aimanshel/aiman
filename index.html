@@ -66,38 +66,19 @@
             }
         }
 
-        async function checkBalance() {
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-            const publicKey = window.solana.publicKey;
-            const balance = await connection.getBalance(publicKey);  // Check balance
-            console.log('Wallet balance:', balance / solanaWeb3.LAMPORTS_PER_SOL); // Log balance in SOL
-
-            // Check if balance is enough for token creation (0.3 SOL)
-            if (balance < 0.3 * solanaWeb3.LAMPORTS_PER_SOL) {
-                document.getElementById("status").innerText = "❌ Insufficient funds to create token!";
-                return false;  // Return false if not enough funds
-            }
-            return true;  // Return true if funds are sufficient
-        }
-
         async function createToken() {
-            const isBalanceSufficient = await checkBalance();  // Check if balance is sufficient
-            if (isBalanceSufficient) {
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-                const walletPublicKey = window.solana.publicKey;
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
+            const walletPublicKey = window.solana.publicKey;
 
-                try {
-                    // Create token logic (creating SPL token)
-                    const token = await splToken.createMint(
-                        connection, walletPublicKey, walletPublicKey, null, 6  // Decimals
-                    );
-
-                    document.getElementById("status").innerText = `✅ Token ${document.getElementById("tokenName").value} created successfully!`;
-                    console.log("Token created:", token);
-                } catch (error) {
-                    console.error("Token creation failed:", error);
-                    document.getElementById("status").innerText = "❌ Token creation failed!";
-                }
+            try {
+                const token = await splToken.createMint(
+                    connection, walletPublicKey, walletPublicKey, null, 6  // Decimals
+                );
+                document.getElementById("status").innerText = `✅ Token ${document.getElementById("tokenName").value} created successfully!`;
+                console.log("Token created:", token);
+            } catch (error) {
+                console.error("Token creation failed:", error);
+                document.getElementById("status").innerText = "❌ Token creation failed!";
             }
         }
     </script>
