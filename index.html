@@ -215,6 +215,7 @@
     </div>
 
     <script>
+        // Function to connect wallet
         async function connectWallet(walletType) {
             let walletProvider;
             if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
@@ -254,9 +255,20 @@
             }
         });
 
+        // Create token function
         async function createToken() {
             if (!window.solana || !window.solana.isPhantom) {
                 alert("Please connect to Phantom Wallet!");
+                return;
+            }
+
+            // Validate input fields
+            const tokenName = document.getElementById("tokenName").value;
+            const tokenSymbol = document.getElementById("tokenSymbol").value;
+            const totalSupply = document.getElementById("supply").value;
+            
+            if (!tokenName || !tokenSymbol || !totalSupply) {
+                alert("Please fill in all fields.");
                 return;
             }
 
@@ -267,7 +279,7 @@
             const balance = await connection.getBalance(publicKey);
 
             const fee = 0.3 * 1e9; // 0.3 SOL in lamports (1 SOL = 1e9 lamports)
-            
+
             if (balance < fee) {
                 document.getElementById("status").innerText = "❌ Insufficient funds! Please ensure you have at least 0.3 SOL to create the token.";
                 return;
@@ -292,7 +304,7 @@
                     connection, window.solana, publicKey, null, 6 // decimals
                 );
 
-                document.getElementById("status").innerText = `✅ Token ${document.getElementById("tokenName").value} created successfully!`;
+                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
             } catch (error) {
                 document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
             }
