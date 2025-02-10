@@ -14,32 +14,34 @@
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #121826;
+            background: linear-gradient(135deg, #1c2333, #293448);
             color: white;
             padding: 20px;
+            margin: 0;
+            height: 100vh;
         }
 
         .container {
-            max-width: 400px;
+            max-width: 500px;
             margin: auto;
-            background: linear-gradient(135deg, #1c2333, #293448);
-            padding: 25px;
-            border-radius: 15px;
+            background: #1e2734;
+            padding: 30px;
+            border-radius: 20px;
             box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        input, button {
+        input, button, label {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 12px;
             border: none;
             font-size: 16px;
             outline: none;
@@ -52,75 +54,75 @@
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             font-size: 16px;
             width: 100%;
             border: none;
-        }
-
-        .wallet-btn {
             background-color: #3498db;
             box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
         }
 
-        .wallet-btn:hover {
+        .wallet-btn:hover, .action-btn:hover {
             background-color: #1d6fa5;
+            box-shadow: 0px 4px 15px rgba(52, 152, 219, 0.6);
         }
 
-        .action-btn {
-            background-color: #e74c3c;
-            box-shadow: 0px 4px 10px rgba(231, 76, 60, 0.4);
-        }
-
-        .action-btn:hover {
-            background-color: #c0392b;
-        }
-
-        .toggle-switch {
+        .wallet-selection-container {
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 10px;
-            margin: 10px 0;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        #status {
+        .wallet-btn {
+            width: 48%;
+        }
+
+        .status-message {
+            font-size: 18px;
+            color: #f39c12;
             margin-top: 20px;
-            color: #f1c40f;
         }
 
         /* Image preview styles */
         #preview {
             max-width: 100%;
-            max-height: 200px;  /* Set the max height */
+            max-height: 200px;
             margin-top: 15px;
             display: block;
             margin-left: auto;
             margin-right: auto;
+            border-radius: 12px;
         }
 
-        /* Flexbox container for wallet buttons */
-        .wallet-selection-container {
+        .toggle-switch {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-            gap: 10px;  /* Adds space between buttons */
-            margin-top: 15px;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            margin: 10px 0;
         }
 
-        .wallet-btn {
-            width: 45%;  /* Set each button width to 45% */
+        .toggle-switch span {
+            font-size: 16px;
         }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+        }
+
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🔗 Solana Token Creator v1</h1>
-        <p>Create your Solana SPL tokens easily and efficiently.</p>
+        <h1>🔗 Solana Token Creator</h1>
+        <p>Create your Solana SPL tokens easily and securely.</p>
 
         <p id="walletStatus">Wallet not connected</p>
         <div class="wallet-selection-container">
@@ -145,16 +147,14 @@
         <label for="supply">Total Supply</label>
         <input type="number" id="supply" placeholder="Enter total supply">
 
-        <!-- Add file input for image -->
         <label for="tokenImage">Upload Token Image</label>
         <input type="file" id="tokenImage" accept="image/*">
-        <br>
+
         <!-- Image preview -->
         <img id="preview" src="" alt="Image preview">
 
         <p><strong>Fees:</strong> Token Creation - 0.3 SOL | Revoke Freeze - 0.1 SOL | Revoke Mint - 0.1 SOL</p>
 
-        <!-- Freeze and Mint Authority options -->
         <div class="toggle-switch">
             <span>Revoke Freeze Authority</span>
             <input type="checkbox" id="revokeFreeze">
@@ -229,7 +229,7 @@
         });
 
         async function createToken() {
-            // تحقق من صحة البيانات المدخلة
+            // Validate input fields
             const tokenName = document.getElementById("tokenName").value;
             const tokenSymbol = document.getElementById("tokenSymbol").value;
             const totalSupply = document.getElementById("supply").value;
@@ -249,14 +249,14 @@
                 return;
             }
 
-            // تحقق من رفع صورة (اختياري)
+            // Check if image file is uploaded
             const imageFile = document.getElementById("tokenImage").files[0];
             if (!imageFile) {
                 alert("❌ Please upload a valid token image.");
                 return;
             }
 
-            // تحقق من أن المحفظة متصلة
+            // Ensure wallet is connected
             if (!window.solana || !window.solana.isPhantom) {
                 alert("❌ Please connect to Phantom Wallet!");
                 return;
