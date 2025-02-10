@@ -123,12 +123,11 @@
         <p>Create your Solana SPL tokens easily and efficiently.</p>
 
         <p id="walletStatus">Wallet not connected</p>
-        <div class="wallet-selection-container">
+
+        <!-- Wallet selection buttons (hidden by default) -->
+        <div class="wallet-selection-container" style="display:none;">
             <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Phantom</button>
             <button class="wallet-btn" onclick="connectWallet('solflare')">🔥 Solflare</button>
-        </div>
-
-        <div class="wallet-selection-container">
             <button class="wallet-btn" onclick="connectWallet('slope')">🔑 Slope Wallet</button>
             <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus Wallet</button>
         </div>
@@ -154,7 +153,6 @@
 
         <p><strong>Fees:</strong> Token Creation - 0.3 SOL | Revoke Freeze - 0.1 SOL | Revoke Mint - 0.1 SOL</p>
 
-        <!-- Freeze and Mint Authority options -->
         <div class="toggle-switch">
             <span>Revoke Freeze Authority</span>
             <input type="checkbox" id="revokeFreeze">
