@@ -96,12 +96,22 @@
         #preview {
             max-width: 100%;
             max-height: 200px;  /* Set the max height */
-            margin-top: 10px;
+            margin-top: 15px;
             display: block;
             margin-left: auto;
             margin-right: auto;
         }
 
+        /* Flexbox for wallet buttons */
+        .wallet-selection-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .wallet-btn {
+            width: 48%;
+        }
     </style>
 </head>
 <body>
@@ -109,9 +119,16 @@
     <div class="container">
         <h1>🔗 Solana Token Creator v1</h1>
         <p>Create your Solana SPL tokens easily and efficiently.</p>
-        
-        <button class="wallet-btn" onclick="openWalletPopup()">Connect Wallet</button>
+
         <p id="walletStatus">Wallet not connected</p>
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Phantom</button>
+            <button class="wallet-btn" onclick="connectWallet('solflare')">🔥 Solflare</button>
+        </div>
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('slope')">🔑 Slope Wallet</button>
+            <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus Wallet</button>
+        </div>
 
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
