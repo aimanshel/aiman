@@ -110,12 +110,57 @@
             font-size: 16px;
         }
 
+        /* Custom Switch Style */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            border-radius: 50%;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
         .footer {
             margin-top: 30px;
             font-size: 14px;
             color: #888;
         }
-
     </style>
 </head>
 <body>
@@ -155,14 +200,21 @@
 
         <p><strong>Fees:</strong> Token Creation - 0.3 SOL | Revoke Freeze - 0.1 SOL | Revoke Mint - 0.1 SOL</p>
 
+        <!-- Freeze and Mint Authority options -->
         <div class="toggle-switch">
             <span>Revoke Freeze Authority</span>
-            <input type="checkbox" id="revokeFreeze">
+            <label class="switch">
+                <input type="checkbox" id="revokeFreeze" checked>
+                <span class="slider"></span>
+            </label>
         </div>
 
         <div class="toggle-switch">
             <span>Revoke Mint Authority</span>
-            <input type="checkbox" id="revokeMint">
+            <label class="switch">
+                <input type="checkbox" id="revokeMint" checked>
+                <span class="slider"></span>
+            </label>
         </div>
 
         <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
@@ -246,13 +298,6 @@
 
             if (isNaN(totalSupply) || totalSupply <= 0) {
                 alert("❌ Please enter a valid total supply greater than zero.");
-                return;
-            }
-
-            // Check if image file is uploaded
-            const imageFile = document.getElementById("tokenImage").files[0];
-            if (!imageFile) {
-                alert("❌ Please upload a valid token image.");
                 return;
             }
 
