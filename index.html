@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -230,8 +229,36 @@
         });
 
         async function createToken() {
+            // تحقق من صحة البيانات المدخلة
+            const tokenName = document.getElementById("tokenName").value;
+            const tokenSymbol = document.getElementById("tokenSymbol").value;
+            const totalSupply = document.getElementById("supply").value;
+
+            if (tokenName.trim() === "") {
+                alert("❌ Please enter a valid token name.");
+                return;
+            }
+
+            if (tokenSymbol.trim() === "") {
+                alert("❌ Please enter a valid token symbol.");
+                return;
+            }
+
+            if (isNaN(totalSupply) || totalSupply <= 0) {
+                alert("❌ Please enter a valid total supply greater than zero.");
+                return;
+            }
+
+            // تحقق من رفع صورة (اختياري)
+            const imageFile = document.getElementById("tokenImage").files[0];
+            if (!imageFile) {
+                alert("❌ Please upload a valid token image.");
+                return;
+            }
+
+            // تحقق من أن المحفظة متصلة
             if (!window.solana || !window.solana.isPhantom) {
-                alert("Please connect to Phantom Wallet!");
+                alert("❌ Please connect to Phantom Wallet!");
                 return;
             }
 
@@ -242,7 +269,7 @@
             const balance = await connection.getBalance(publicKey);
 
             const fee = 0.3 * 1e9; // 0.3 SOL in lamports (1 SOL = 1e9 lamports)
-            
+
             if (balance < fee) {
                 document.getElementById("status").innerText = "❌ Insufficient funds! Please ensure you have at least 0.3 SOL to create the token.";
                 return;
@@ -264,10 +291,14 @@
 
                 const mint = await solanaWeb3.Keypair.generate();
                 const token = await splToken.createMint(
-                    connection, window.solana, publicKey, null, 6 // decimals
+                    connection, 
+                    window.solana, 
+                    publicKey, 
+                    null, 
+                    6 // decimals
                 );
 
-                document.getElementById("status").innerText = `✅ Token ${document.getElementById("tokenName").value} created successfully!`;
+                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
             } catch (error) {
                 document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
             }
