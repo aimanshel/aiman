@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,13 +9,9 @@
     <meta name="author" content="Your Project Name">
     <title>Solana Token Creator - Generate Your SPL Tokens</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Solana Web3 and Wallet Adapter scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.33.0/dist/solanaWeb3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-wallets@0.7.10/dist/umd/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-base@0.7.10/dist/umd/index.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
     <style>
-        /* Custom Styles */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
@@ -84,7 +81,7 @@
         /* Image preview styles */
         #preview {
             max-width: 100%;
-            max-height: 200px;
+            max-height: 200px;  /* Set the max height */
             margin-top: 15px;
             display: block;
             margin-left: auto;
@@ -96,18 +93,18 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: space-evenly;
-            gap: 10px;
+            gap: 10px;  /* Adds space between buttons */
             margin-top: 15px;
         }
 
         .wallet-btn {
-            width: 45%;
+            width: 45%;  /* Set each button width to 45% */
         }
 
         textarea {
-            resize: vertical;
+            resize: vertical; /* Allows the textarea to be resized vertically */
             overflow: hidden;
-            height: 50px;
+            height: 50px; /* Initial height */
             transition: height 0.2s ease;
         }
     </style>
@@ -135,23 +132,65 @@
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
 
-        <!-- Other fields like Symbol, Decimals, Description, etc. -->
+        <!-- Token Symbol -->
+        <label for="tokenSymbol">Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
+
+        <!-- Decimals -->
+        <label for="decimals">Decimals</label>
+        <input type="number" id="decimals" value="6">
+
+        <!-- Total Supply -->
+        <label for="supply">Total Supply</label>
+        <input type="number" id="supply" placeholder="Enter total supply">
+
+        <!-- Description (Resizable) -->
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Enter token description" required></textarea>
+
+        <!-- Token Image Upload -->
+        <label for="tokenImage">Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*">
         
+        <!-- Image Preview -->
+        <img id="preview" src="" alt="Image preview">
+
+        <!-- Fees Section -->
+        <div class="toggle-switch">
+            <span>Revoke Freeze Authority</span>
+            <label class="switch">
+                <input type="checkbox" id="revokeFreeze" checked>
+                <span class="slider"></span>
+            </label>
+            <span>(0.1 SOL)</span>
+        </div>
+
+        <div class="toggle-switch">
+            <span>Revoke Mint Authority</span>
+            <label class="switch">
+                <input type="checkbox" id="revokeMint" checked>
+                <span class="slider"></span>
+            </label>
+            <span>(0.1 SOL)</span>
+        </div>
+
+        <!-- Create Token Button -->
         <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
         <p class="status-message" id="status"></p>
     </div>
 
     <script>
-        let walletProvider = null;
-
-        // Connect to wallet
+        // Function to connect wallet
         async function connectWallet(walletType) {
+            let walletProvider;
             if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
                 walletProvider = window.solana;
             } else if (walletType === "solflare" && window.solflare) {
                 walletProvider = window.solflare;
             } else if (walletType === "slope" && window.slope) {
                 walletProvider = window.slope;
+            } else if (walletType === "torus" && window.torus) {
+                walletProvider = window.torus;
             } else {
                 alert(`Please install ${walletType} Wallet!`);
                 return;
@@ -165,13 +204,23 @@
             }
         }
 
-        window.onload = function() {
-            if (!window.solana) {
-                alert("Please install Solana Wallet!");
-            }
-        };
+        // Image preview functionality
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
 
-        // Function to create token (Your implementation)
+            reader.onload = function () {
+                const preview = document.getElementById("preview");
+                preview.src = reader.result;
+                preview.style.display = "block";
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Create token function
         async function createToken() {
             const tokenName = document.getElementById("tokenName").value;
             const tokenSymbol = document.getElementById("tokenSymbol").value;
