@@ -7,8 +7,10 @@
     <meta name="keywords" content="Solana, SPL Token, Solana Token Creator, Crypto, Blockchain, Token Generator">
     <meta name="author" content="Your Project Name">
     <title>Solana Token Creator - Generate Your SPL Tokens</title>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react@0.14.0/dist/umd/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.33.0/dist/web3.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-wallets@0.7.10/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-base@0.7.10/dist/umd/index.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -178,17 +180,16 @@
     </div>
 
     <script>
-        // Function to connect wallet
+        // Initialize wallet adapters
+        const phantomWallet = new window.solanaWeb3.PhantomWalletAdapter();
+        const solflareWallet = new window.solanaWeb3.SolflareWalletAdapter();
+
         async function connectWallet(walletType) {
             let walletProvider;
-            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
-                walletProvider = window.solana;
-            } else if (walletType === "solflare" && window.solflare) {
-                walletProvider = window.solflare;
-            } else if (walletType === "slope" && window.slope) {
-                walletProvider = window.slope;
-            } else if (walletType === "torus" && window.torus) {
-                walletProvider = window.torus;
+            if (walletType === "phantom") {
+                walletProvider = phantomWallet;
+            } else if (walletType === "solflare") {
+                walletProvider = solflareWallet;
             } else {
                 alert(`Please install ${walletType} Wallet!`);
                 return;
@@ -267,4 +268,17 @@
                 const signature = await window.solana.signAndSendTransaction(transaction);
                 await connection.confirmTransaction(signature);
 
-                const mint = await
+                const mint = await solanaWeb3.Keypair.generate();
+                const token = await splToken.createMint(
+                    connection, window.solana, publicKey, null, 6 // decimals
+                );
+
+                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
+            } catch (error) {
+                document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
+            }
+        }
+    </script>
+
+</body>
+</html>
