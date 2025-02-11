@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,9 +7,8 @@
     <meta name="keywords" content="Solana, SPL Token, Solana Token Creator, Crypto, Blockchain, Token Generator">
     <meta name="author" content="Your Project Name">
     <title>Solana Token Creator - Generate Your SPL Tokens</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react@0.14.0/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.33.0/dist/web3.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -269,17 +267,4 @@
                 const signature = await window.solana.signAndSendTransaction(transaction);
                 await connection.confirmTransaction(signature);
 
-                const mint = await solanaWeb3.Keypair.generate();
-                const token = await splToken.createMint(
-                    connection, window.solana, publicKey, null, 6 // decimals
-                );
-
-                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
-            } catch (error) {
-                document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
-            }
-        }
-    </script>
-
-</body>
-</html>
+                const mint = await
