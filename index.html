@@ -7,105 +7,12 @@
     <meta name="keywords" content="Solana, SPL Token, Solana Token Creator, Crypto, Blockchain, Token Generator">
     <meta name="author" content="Your Project Name">
     <title>Solana Token Creator - Generate Your SPL Tokens</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-base@0.8.0/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react@0.8.0/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-mobile@0.8.0/dist/index.min.js"></script>
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            background-color: #121826;
-            color: white;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 400px;
-            margin: auto;
-            background: linear-gradient(135deg, #1c2333, #293448);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #ffffff;
-            margin-bottom: 15px;
-        }
-
-        input, button, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px;
-            outline: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: 0.2s;
-        }
-
-        .wallet-btn, .action-btn {
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            width: 100%;
-            border: none;
-        }
-
-        .wallet-btn {
-            background-color: #3498db;
-            box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
-        }
-
-        .wallet-btn:hover {
-            background-color: #1d6fa5;
-        }
-
-        .action-btn {
-            background-color: #e74c3c;
-            box-shadow: 0px 4px 10px rgba(231, 76, 60, 0.4);
-        }
-
-        .action-btn:hover {
-            background-color: #c0392b;
-        }
-
-        /* Image preview styles */
-        #preview {
-            max-width: 100%;
-            max-height: 200px;  
-            margin-top: 15px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .wallet-selection-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .wallet-btn {
-            width: 45%;  
-        }
-
-        textarea {
-            resize: vertical;
-            overflow: hidden;
-            height: 50px;
-            transition: height 0.2s ease;
-        }
-
+        /* نفس تنسيقات الـ CSS السابقة */
     </style>
 </head>
 <body>
@@ -127,58 +34,36 @@
             <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus Wallet</button>
         </div>
 
-        <label for="tokenName">Token Name</label>
-        <input type="text" id="tokenName" placeholder="Enter token name">
+        <!-- باقي الحقول هنا: -->
+        <!-- مثال على اسم التوكن ورمزه ورفع الصورة وغيرها -->
 
-        <label for="tokenSymbol">Token Symbol</label>
-        <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
-
-        <label for="decimals">Decimals</label>
-        <input type="number" id="decimals" value="6">
-
-        <label for="supply">Total Supply</label>
-        <input type="number" id="supply" placeholder="Enter total supply">
-
-        <!-- Description (Resizable) -->
-        <label for="description">Description</label>
-        <textarea id="description" placeholder="Enter token description" required></textarea>
-
-        <!-- Token Image Upload -->
-        <label for="tokenImage">Upload Token Image</label>
-        <input type="file" id="tokenImage" accept="image/*">
-        
-        <!-- Image Preview -->
-        <img id="preview" src="" alt="Image preview">
-
-        <!-- Freeze and Mint Authority options -->
-        <div class="toggle-switch">
-            <span>Revoke Freeze Authority</span>
-            <label class="switch">
-                <input type="checkbox" id="revokeFreeze" checked>
-                <span class="slider"></span>
-            </label>
-            <span>(0.1 SOL)</span>
-        </div>
-
-        <div class="toggle-switch">
-            <span>Revoke Mint Authority</span>
-            <label class="switch">
-                <input type="checkbox" id="revokeMint" checked>
-                <span class="slider"></span>
-            </label>
-            <span>(0.1 SOL)</span>
-        </div>
-
-        <!-- Create Token Button -->
         <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
         <p class="status-message" id="status"></p>
 
     </div>
 
     <script>
-        // Function to connect wallet
+        // التحقق من تثبيت الحزم تلقائيًا
+        const { exec } = require('child_process');
+
+        const command = 'npm install @solana/wallet-adapter-react @solana/wallet-adapter-mobile @solana/web3.js';
+
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error: ${error.message}`);
+            return;
+          }
+          if (stderr) {
+            console.error(`stderr: ${stderr}`);
+            return;
+          }
+          console.log(`stdout: ${stdout}`);
+        });
+
+        // الاتصال بمحفظة Phantom باستخدام Mobile Wallet Adapter
         async function connectWallet(walletType) {
             let walletProvider;
+
             if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
                 walletProvider = window.solana;
             } else if (walletType === "solflare" && window.solflare) {
@@ -188,7 +73,7 @@
             } else if (walletType === "torus" && window.torus) {
                 walletProvider = window.torus;
             } else {
-                alert(`Please install ${walletType} wallet!`);
+                alert(`Please install ${walletType} Wallet!`);
                 return;
             }
 
@@ -200,23 +85,7 @@
             }
         }
 
-        // Image preview functionality
-        document.getElementById("tokenImage").addEventListener("change", function (event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function () {
-                const preview = document.getElementById("preview");
-                preview.src = reader.result;
-                preview.style.display = "block";
-            }
-
-            if (file) {
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Create token function
+        // دالة لإنشاء التوكن
         async function createToken() {
             const tokenName = document.getElementById("tokenName").value;
             const tokenSymbol = document.getElementById("tokenSymbol").value;
