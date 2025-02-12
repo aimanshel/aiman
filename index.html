@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Create your own Solana SPL tokens easily with our simple and secure Solana Token Creator. Connect your wallet and manage tokens effortlessly.">
-    <meta name="keywords" content="Solana, SPL Token, Solana Token Creator, Crypto, Blockchain, Token Generator">
-    <meta name="author" content="Your Project Name">
-    <title>Solana Token Creator - Generate Your SPL Tokens</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Updated CDN Link for Solana Web3 -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.33.0/dist/solana-web3.min.js"></script>
+    <title>Solana Token Creator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -116,7 +112,7 @@
         <p>Create your Solana SPL tokens easily and securely.</p>
 
         <p id="walletStatus">Wallet not connected</p>
-
+        
         <!-- Wallet buttons -->
         <div class="wallet-selection-container">
             <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Phantom</button>
@@ -196,12 +192,14 @@
                 return;
             }
 
-            try {
-                const response = await walletProvider.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
-            } catch (err) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
-            }
+            walletProvider.connect()
+                .then((response) => {
+                    document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                })
+                .catch((err) => {
+                    document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+                    console.error("Error connecting wallet: ", err);
+                });
         }
 
         // Image preview functionality
