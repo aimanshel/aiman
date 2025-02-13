@@ -118,6 +118,53 @@
             border-radius: 50%;
             border: 2px solid #00d1ff;
         }
+
+        /* تصميم التوجّل سويتش */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #00d1ff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
     </style>
 </head>
 <body>
@@ -151,6 +198,9 @@
             <label for="supply">Total Supply</label>
             <input type="number" id="supply" placeholder="Enter total supply">
 
+            <label for="description">Description</label>
+            <textarea id="description" placeholder="Enter token description"></textarea>
+
             <label for="tokenImage">Upload Token Image</label>
             <input type="file" id="tokenImage" accept="image/*">
             <img id="preview" src="" alt="Image preview">
@@ -159,12 +209,18 @@
         <!-- Authority Toggles -->
         <div class="toggle-container">
             <label>Revoke Freeze Authority</label>
-            <input type="checkbox" id="revokeFreeze" checked>
+            <label class="switch">
+                <input type="checkbox" id="revokeFreeze" checked>
+                <span class="slider"></span>
+            </label>
         </div>
 
         <div class="toggle-container">
             <label>Revoke Mint Authority</label>
-            <input type="checkbox" id="revokeMint" checked>
+            <label class="switch">
+                <input type="checkbox" id="revokeMint" checked>
+                <span class="slider"></span>
+            </label>
         </div>
 
         <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
@@ -172,29 +228,6 @@
     </div>
 
     <script>
-        async function connectWallet(walletType) {
-            let walletProvider;
-            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
-                walletProvider = window.solana;
-            } else if (walletType === "solflare" && window.solflare) {
-                walletProvider = window.solflare;
-            } else if (walletType === "slope" && window.slope) {
-                walletProvider = window.slope;
-            } else if (walletType === "torus" && window.torus) {
-                walletProvider = window.torus;
-            } else {
-                alert(`Please install ${walletType} Wallet!`);
-                return;
-            }
-
-            try {
-                await walletProvider.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${walletProvider.publicKey.toString()}`;
-            } catch (err) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
-            }
-        }
-
         document.getElementById("tokenImage").addEventListener("change", function (event) {
             const file = event.target.files[0];
             const reader = new FileReader();
