@@ -83,30 +83,39 @@
             margin-right: auto;
         }
 
-        /* Toggle Switch */
+        /* Wallet selection container */
+        .wallet-selection-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .wallet-btn {
+            width: 45%;
+        }
+
+        /* Toggle switch */
         .toggle-switch {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             background: rgba(255, 255, 255, 0.1);
             padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
         }
 
-        .toggle-switch label {
-            font-size: 14px;
+        .toggle-switch input {
+            transform: scale(1.2);
         }
 
-        /* Status Message */
+        /* Status message */
         .status-message {
             font-size: 14px;
+            color: #f1c40f;
             margin-top: 10px;
-            color: #00ff7f;
-        }
-
-        .error-message {
-            color: #ff4c4c;
         }
     </style>
 </head>
@@ -117,11 +126,19 @@
         <p>Create your Solana SPL tokens easily and securely.</p>
 
         <p id="walletStatus">Wallet not connected</p>
-        
-        <!-- Wallet buttons -->
-        <button class="wallet-btn" onclick="connectWallet()">🔗 Connect Wallet</button>
 
-        <!-- Token Inputs -->
+        <!-- Wallet buttons -->
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Phantom</button>
+            <button class="wallet-btn" onclick="connectWallet('solflare')">🔥 Solflare</button>
+        </div>
+
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('slope')">🔑 Slope Wallet</button>
+            <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus Wallet</button>
+        </div>
+
+        <!-- Token details -->
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
 
@@ -135,64 +152,70 @@
         <input type="number" id="supply" placeholder="Enter total supply">
 
         <label for="description">Description</label>
-        <textarea id="description" placeholder="Enter token description"></textarea>
+        <textarea id="description" placeholder="Enter token description" required></textarea>
 
+        <!-- Upload Token Image -->
         <label for="tokenImage">Upload Token Image</label>
         <input type="file" id="tokenImage" accept="image/*">
         <img id="preview" src="" alt="Image preview">
 
-        <!-- Toggle Switch -->
+        <!-- Toggle switches -->
         <div class="toggle-switch">
             <span>Revoke Freeze Authority</span>
             <input type="checkbox" id="revokeFreeze" checked>
         </div>
 
+        <div class="toggle-switch">
+            <span>Revoke Mint Authority</span>
+            <input type="checkbox" id="revokeMint" checked>
+        </div>
+
+        <!-- Create Token Button -->
         <button class="action-btn" onclick="createToken()">Create Token</button>
         <p class="status-message" id="status"></p>
     </div>
 
     <script>
-        async function connectWallet() {
-            if (window.solana && window.solana.isPhantom) {
-                try {
-                    const response = await window.solana.connect();
-                    document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
-                } catch (error) {
-                    document.getElementById("walletStatus").innerText = "❌ Wallet connection failed";
-                }
+        async function connectWallet(walletType) {
+            let walletProvider;
+            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+                walletProvider = window.solana;
             } else {
-                alert("Please install Phantom Wallet!");
+                alert(`Please install ${walletType} Wallet!`);
+                return;
+            }
+
+            try {
+                const response = await walletProvider.connect();
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+            } catch (err) {
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
             }
         }
 
         document.getElementById("tokenImage").addEventListener("change", function (event) {
             const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                document.getElementById("preview").src = reader.result;
+                document.getElementById("preview").style.display = "block";
+            }
+
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function () {
-                    document.getElementById("preview").src = reader.result;
-                    document.getElementById("preview").style.display = "block";
-                };
                 reader.readAsDataURL(file);
             }
         });
 
         async function createToken() {
-            const tokenName = document.getElementById("tokenName").value;
-            const tokenSymbol = document.getElementById("tokenSymbol").value;
-            const totalSupply = document.getElementById("supply").value;
-            const description = document.getElementById("description").value;
-
-            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
-                document.getElementById("status").innerText = "❌ Please fill all fields!";
-                document.getElementById("status").classList.add("error-message");
+            if (!window.solana || !window.solana.isPhantom) {
+                alert("Please connect to Phantom Wallet!");
                 return;
             }
 
-            document.getElementById("status").innerText = "🚀 Creating token...";
+            document.getElementById("status").innerText = "Creating token... Please wait.";
             setTimeout(() => {
                 document.getElementById("status").innerText = "✅ Token created successfully!";
-                document.getElementById("status").classList.remove("error-message");
             }, 2000);
         }
     </script>
