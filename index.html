@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solana Token Creator</title>
     
-    <!-- استيراد المكتبات من unpkg -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.min.js"></script>
-    <script src="https://unpkg.com/@solana/wallet-adapter-web@latest/lib/index.iife.min.js"></script>
+    <!-- تحميل المكتبات من jsDelivr -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@latest/lib/index.iife.min.js"></script>
 
     <style>
         body {
@@ -26,7 +26,7 @@
             border-radius: 15px;
             box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
         }
-        input, button, textarea {
+        input, button {
             width: 100%;
             padding: 12px;
             margin: 8px 0;
@@ -71,15 +71,13 @@
         <button class="wallet-btn" onclick="connectWallet()">🔗 Connect Wallet</button>
         <br>
 
-        <!-- Token Name -->
+        <!-- Token Inputs -->
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
 
-        <!-- Token Symbol -->
         <label for="tokenSymbol">Token Symbol</label>
         <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
 
-        <!-- Total Supply -->
         <label for="supply">Total Supply</label>
         <input type="number" id="supply" placeholder="Enter total supply">
 
