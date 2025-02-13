@@ -4,34 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SolSnap - Solana Token Creator</title>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.33.0/lib/index.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.1.8/lib/index.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/lib/index.umd.min.js"></script>
+
+    <!-- استدعاء مكتبات Solana -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <script src="https://unpkg.com/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
+
+    <!-- تصميم الواجهة -->
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #0a0f1a;
+            background-color: #121826;
             color: white;
             padding: 20px;
         }
-
         .container {
-            max-width: 450px;
+            max-width: 400px;
             margin: auto;
-            background: #141c2f;
-            padding: 30px;
+            background: linear-gradient(135deg, #1c2333, #293448);
+            padding: 25px;
             border-radius: 15px;
             box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
         }
-
         h1 {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 600;
             color: #ffffff;
             margin-bottom: 15px;
         }
-
         input, button, textarea {
             width: 100%;
             padding: 12px;
@@ -44,7 +45,6 @@
             color: white;
             transition: 0.2s;
         }
-
         .wallet-btn, .action-btn {
             font-weight: bold;
             cursor: pointer;
@@ -55,25 +55,20 @@
             width: 100%;
             border: none;
         }
-
         .wallet-btn {
             background-color: #3498db;
             box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
         }
-
         .wallet-btn:hover {
             background-color: #1d6fa5;
         }
-
         .action-btn {
             background-color: #e74c3c;
             box-shadow: 0px 4px 10px rgba(231, 76, 60, 0.4);
         }
-
         .action-btn:hover {
             background-color: #c0392b;
         }
-
         #preview {
             max-width: 100%;
             max-height: 200px;
@@ -82,7 +77,6 @@
             margin-left: auto;
             margin-right: auto;
         }
-
         .wallet-selection-container {
             display: flex;
             flex-wrap: wrap;
@@ -90,11 +84,9 @@
             gap: 10px;
             margin-top: 15px;
         }
-
         .wallet-btn {
             width: 45%;
         }
-
         textarea {
             resize: vertical;
             overflow: hidden;
@@ -107,7 +99,7 @@
 
     <div class="container">
         <h1>🔗 SolSnap - Solana Token Creator</h1>
-        <p>Create your Solana SPL tokens easily and securely.</p>
+        <p>Create and manage Solana SPL tokens easily.</p>
 
         <p id="walletStatus">Wallet not connected</p>
 
@@ -140,7 +132,7 @@
         <input type="file" id="tokenImage" accept="image/*">
         <img id="preview" src="" alt="Image preview">
 
-        <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
+        <button class="action-btn" onclick="createToken()">Create Token</button>
         <p class="status-message" id="status"></p>
     </div>
 
@@ -160,24 +152,23 @@
                 return;
             }
 
-            try {
-                const response = await walletProvider.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
-            } catch (err) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
-            }
+            walletProvider.connect()
+                .then((response) => {
+                    document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                })
+                .catch((err) => {
+                    document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+                    console.error("Error connecting wallet: ", err);
+                });
         }
 
         document.getElementById("tokenImage").addEventListener("change", function (event) {
             const file = event.target.files[0];
             const reader = new FileReader();
-
             reader.onload = function () {
-                const preview = document.getElementById("preview");
-                preview.src = reader.result;
-                preview.style.display = "block";
+                document.getElementById("preview").src = reader.result;
+                document.getElementById("preview").style.display = "block";
             }
-
             if (file) {
                 reader.readAsDataURL(file);
             }
@@ -187,20 +178,15 @@
             const tokenName = document.getElementById("tokenName").value;
             const tokenSymbol = document.getElementById("tokenSymbol").value;
             const totalSupply = document.getElementById("supply").value;
-            const description = document.getElementById("description").value;
 
-            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+            if (!tokenName || !tokenSymbol || !totalSupply) {
                 alert("Please fill in all fields.");
                 return;
             }
 
             document.getElementById("status").innerText = "Creating token... Please wait.";
 
-            try {
-                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
-            } catch (error) {
-                document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
-            }
+            // كود إنشاء التوكن سيتم إضافته لاحقًا بناءً على متطلبات المشروع
         }
     </script>
 
