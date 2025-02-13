@@ -101,8 +101,49 @@
             color: #ffffff;
         }
 
-        .token-settings {
-            margin-top: 20px;
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: 0.4s;
+            border-radius: 25px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 3.5px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #00d1ff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
         }
 
         .status-message {
@@ -140,35 +181,39 @@
             <button class="wallet-btn" onclick="connectWallet('torus')">Torus</button>
         </div>
 
-        <div class="token-settings">
-            <label for="tokenName">Token Name</label>
-            <input type="text" id="tokenName" placeholder="Ex: SolSnapToken">
+        <label for="tokenName">Token Name</label>
+        <input type="text" id="tokenName" placeholder="Ex: SolSnapToken">
 
-            <label for="tokenSymbol">Token Symbol</label>
-            <input type="text" id="tokenSymbol" placeholder="Ex: SST">
+        <label for="tokenSymbol">Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="Ex: SST">
 
-            <label for="decimals">Decimals</label>
-            <input type="number" id="decimals" value="6" min="0" max="9">
+        <label for="decimals">Decimals</label>
+        <input type="number" id="decimals" value="6" min="0" max="9">
 
-            <label for="supply">Total Supply</label>
-            <input type="number" id="supply" placeholder="Enter total supply" min="1">
+        <label for="supply">Total Supply</label>
+        <input type="number" id="supply" placeholder="Enter total supply" min="1">
 
-            <label for="description">Description</label>
-            <textarea id="description" placeholder="Enter token description"></textarea>
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Enter token description"></textarea>
 
-            <label for="tokenImage">Upload Token Image</label>
-            <input type="file" id="tokenImage" accept="image/*">
-            <img id="preview" src="" alt="Image preview">
-        </div>
+        <label for="tokenImage">Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*">
+        <img id="preview" src="" alt="Image preview">
 
         <div class="toggle-container">
             <label>Revoke Freeze Authority</label>
-            <input type="checkbox" id="revokeFreeze">
+            <label class="toggle-switch">
+                <input type="checkbox" id="revokeFreeze">
+                <span class="slider"></span>
+            </label>
         </div>
 
         <div class="toggle-container">
             <label>Revoke Mint Authority</label>
-            <input type="checkbox" id="revokeMint">
+            <label class="toggle-switch">
+                <input type="checkbox" id="revokeMint">
+                <span class="slider"></span>
+            </label>
         </div>
 
         <button class="action-btn" onclick="validateAndCreateToken()">Create Token (0.3 SOL)</button>
@@ -188,16 +233,6 @@
                 return;
             }
 
-            if (isNaN(totalSupply) || totalSupply <= 0) {
-                showMessage("⚠️ Total Supply should be a valid positive number!", "error");
-                return;
-            }
-
-            if (!imageInput.files[0]) {
-                showMessage("⚠️ Please upload an image!", "error");
-                return;
-            }
-
             showMessage("✅ Creating token... Please wait.", "success");
         }
 
@@ -206,17 +241,6 @@
             status.textContent = msg;
             status.className = type === "error" ? "status-message" : "success-message";
         }
-
-        document.getElementById("tokenImage").addEventListener("change", function (event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function () {
-                document.getElementById("preview").src = reader.result;
-            }
-            if (file) {
-                reader.readAsDataURL(file);
-            }
-        });
     </script>
 
 </body>
