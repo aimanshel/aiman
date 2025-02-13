@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TokenSnap - Solana Token Creator</title>
-    
-    <!-- تحميل مكتبات Solana و Wallet Adapter -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-wallets@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-mobile-wallet-adapter@latest"></script>
-    
+
+    <!-- تحميل مكتبات Solana -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -54,35 +54,59 @@
     </div>
 
     <script>
-        let walletAdapter;
+        let walletProvider;
 
         async function connectWallet() {
+            console.log("🔗 Attempting to connect to wallet...");
+
+            if (window.solana && window.solana.isPhantom) {
+                walletProvider = window.solana;
+            } else {
+                alert("Phantom Wallet not installed. Please install it first!");
+                return;
+            }
+
             try {
-                walletAdapter = new solanaMobile.MobileWalletAdapter();
-                await walletAdapter.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${walletAdapter.publicKey.toString()}`;
+                const response = await walletProvider.connect();
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                console.log("✅ Wallet connected:", response.publicKey.toString());
             } catch (error) {
-                console.error("Wallet connection failed:", error);
+                console.error("❌ Wallet connection failed:", error);
                 document.getElementById("walletStatus").innerText = "❌ Wallet connection failed";
             }
         }
 
         async function createToken() {
-            if (!walletAdapter || !walletAdapter.publicKey) {
+            if (!walletProvider || !walletProvider.publicKey) {
                 alert("Please connect your wallet first!");
                 return;
             }
 
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-            const payer = walletAdapter.publicKey;
+            const payer = walletProvider.publicKey;
+            console.log("🔍 Checking wallet balance...");
+
+            const balance = await connection.getBalance(payer);
+            console.log("💰 Wallet balance:", balance / 1e9, "SOL");
+
+            if (balance < 0.3 * 1e9) {
+                alert("❌ Insufficient funds! You need at least 0.3 SOL.");
+                return;
+            }
 
             try {
+                console.log("🚀 Creating token...");
                 const mint = await splToken.createMint(
-                    connection, payer, payer, null, 6
+                    connection,
+                    payer,
+                    payer,
+                    null,
+                    6 // 6 decimals
                 );
                 document.getElementById("statusMessage").innerText = `✅ Token Created: ${mint.toString()}`;
+                console.log("✅ Token created successfully:", mint.toString());
             } catch (error) {
-                console.error("Token creation failed:", error);
+                console.error("❌ Token creation failed:", error);
                 document.getElementById("statusMessage").innerText = "❌ Token creation failed";
             }
         }
