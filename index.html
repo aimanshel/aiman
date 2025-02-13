@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SolSnap - Token Creator</title>
+    
+    <!-- مكتبات Solana -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
     <script src="https://unpkg.com/@solana/spl-token@latest/dist/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
-    
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -18,7 +20,7 @@
         }
 
         .container {
-            max-width: 500px;
+            max-width: 550px;
             margin: auto;
             background: linear-gradient(135deg, #0d162a, #1c2e47);
             padding: 30px;
@@ -28,7 +30,7 @@
         }
 
         h1 {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
             color: #00d1ff;
             margin-bottom: 15px;
@@ -88,6 +90,17 @@
             width: 48%;
         }
 
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .toggle-container label {
+            color: #ffffff;
+        }
+
         .token-settings {
             margin-top: 20px;
         }
@@ -96,6 +109,14 @@
             margin-top: 10px;
             font-size: 14px;
             color: #00ff87;
+        }
+
+        #preview {
+            max-width: 100px;
+            margin: 10px auto;
+            display: block;
+            border-radius: 50%;
+            border: 2px solid #00d1ff;
         }
     </style>
 </head>
@@ -129,6 +150,21 @@
 
             <label for="supply">Total Supply</label>
             <input type="number" id="supply" placeholder="Enter total supply">
+
+            <label for="tokenImage">Upload Token Image</label>
+            <input type="file" id="tokenImage" accept="image/*">
+            <img id="preview" src="" alt="Image preview">
+        </div>
+
+        <!-- Authority Toggles -->
+        <div class="toggle-container">
+            <label>Revoke Freeze Authority</label>
+            <input type="checkbox" id="revokeFreeze" checked>
+        </div>
+
+        <div class="toggle-container">
+            <label>Revoke Mint Authority</label>
+            <input type="checkbox" id="revokeMint" checked>
         </div>
 
         <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
@@ -159,33 +195,17 @@
             }
         }
 
-        async function createToken() {
-            const tokenName = document.getElementById("tokenName").value;
-            const tokenSymbol = document.getElementById("tokenSymbol").value;
-            const totalSupply = document.getElementById("supply").value;
-
-            if (!tokenName || !tokenSymbol || !totalSupply) {
-                alert("Please fill in all fields.");
-                return;
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function () {
+                document.getElementById("preview").src = reader.result;
             }
-
-            document.getElementById("status").innerText = "🚀 Creating token...";
-
-            try {
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-                const publicKey = window.solana.publicKey;
-                const balance = await connection.getBalance(publicKey);
-
-                if (balance < 0.3 * 1e9) {
-                    document.getElementById("status").innerText = "❌ Insufficient funds!";
-                    return;
-                }
-
-                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
-            } catch (error) {
-                document.getElementById("status").innerText = "❌ Transaction failed.";
+            if (file) {
+                reader.readAsDataURL(file);
             }
-        }
+        });
+
     </script>
 
 </body>
