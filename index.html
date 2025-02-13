@@ -108,6 +108,10 @@
         .status-message {
             margin-top: 10px;
             font-size: 14px;
+            color: #ff004c;
+        }
+
+        .success-message {
             color: #00ff87;
         }
 
@@ -118,53 +122,6 @@
             border-radius: 50%;
             border: 2px solid #00d1ff;
         }
-
-        /* تصميم التوجّل سويتش */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #00d1ff;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
     </style>
 </head>
 <body>
@@ -173,7 +130,6 @@
         <h1>🚀 SolSnap - Token Creator</h1>
         <p id="walletStatus">🔴 Wallet not connected</p>
 
-        <!-- Wallet Buttons -->
         <div class="wallet-selection-container">
             <button class="wallet-btn" onclick="connectWallet('phantom')">Phantom</button>
             <button class="wallet-btn" onclick="connectWallet('solflare')">Solflare</button>
@@ -184,7 +140,6 @@
             <button class="wallet-btn" onclick="connectWallet('torus')">Torus</button>
         </div>
 
-        <!-- Token Settings -->
         <div class="token-settings">
             <label for="tokenName">Token Name</label>
             <input type="text" id="tokenName" placeholder="Ex: SolSnapToken">
@@ -193,10 +148,10 @@
             <input type="text" id="tokenSymbol" placeholder="Ex: SST">
 
             <label for="decimals">Decimals</label>
-            <input type="number" id="decimals" value="6">
+            <input type="number" id="decimals" value="6" min="0" max="9">
 
             <label for="supply">Total Supply</label>
-            <input type="number" id="supply" placeholder="Enter total supply">
+            <input type="number" id="supply" placeholder="Enter total supply" min="1">
 
             <label for="description">Description</label>
             <textarea id="description" placeholder="Enter token description"></textarea>
@@ -206,28 +161,52 @@
             <img id="preview" src="" alt="Image preview">
         </div>
 
-        <!-- Authority Toggles -->
         <div class="toggle-container">
             <label>Revoke Freeze Authority</label>
-            <label class="switch">
-                <input type="checkbox" id="revokeFreeze" checked>
-                <span class="slider"></span>
-            </label>
+            <input type="checkbox" id="revokeFreeze">
         </div>
 
         <div class="toggle-container">
             <label>Revoke Mint Authority</label>
-            <label class="switch">
-                <input type="checkbox" id="revokeMint" checked>
-                <span class="slider"></span>
-            </label>
+            <input type="checkbox" id="revokeMint">
         </div>
 
-        <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
+        <button class="action-btn" onclick="validateAndCreateToken()">Create Token (0.3 SOL)</button>
         <p class="status-message" id="status"></p>
     </div>
 
     <script>
+        function validateAndCreateToken() {
+            const tokenName = document.getElementById("tokenName").value.trim();
+            const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
+            const totalSupply = document.getElementById("supply").value;
+            const description = document.getElementById("description").value.trim();
+            const imageInput = document.getElementById("tokenImage");
+
+            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+                showMessage("⚠️ All fields are required!", "error");
+                return;
+            }
+
+            if (isNaN(totalSupply) || totalSupply <= 0) {
+                showMessage("⚠️ Total Supply should be a valid positive number!", "error");
+                return;
+            }
+
+            if (!imageInput.files[0]) {
+                showMessage("⚠️ Please upload an image!", "error");
+                return;
+            }
+
+            showMessage("✅ Creating token... Please wait.", "success");
+        }
+
+        function showMessage(msg, type) {
+            const status = document.getElementById("status");
+            status.textContent = msg;
+            status.className = type === "error" ? "status-message" : "success-message";
+        }
+
         document.getElementById("tokenImage").addEventListener("change", function (event) {
             const file = event.target.files[0];
             const reader = new FileReader();
@@ -238,7 +217,6 @@
                 reader.readAsDataURL(file);
             }
         });
-
     </script>
 
 </body>
