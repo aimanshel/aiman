@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TokenSnap - Solana Token Creator</title>
-    
-    <!-- مكتبات Solana -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.76.1/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/index.iife.min.js"></script>
+
+    <!-- تحميل مكتبات Solana عبر unpkg -->
+    <script src="https://unpkg.com/@solana/web3.js@1.76.1/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/wallet-adapter-wallets@0.16.0/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/wallet-adapter-base@0.16.0/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.min.js"></script>
 
     <style>
         body {
@@ -35,7 +36,7 @@
             margin-bottom: 15px;
         }
 
-        input, button, textarea {
+        input, button {
             width: 100%;
             padding: 12px;
             margin: 8px 0;
@@ -63,89 +64,91 @@
         .wallet-btn:hover {
             background-color: #1d6fa5;
         }
-
-        .action-btn {
-            background-color: #e74c3c;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            border: none;
-            width: 100%;
-        }
-
-        .action-btn:hover {
-            background-color: #c0392b;
-        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🚀 TokenSnap</h1>
-        <p>Create your Solana SPL tokens easily and securely.</p>
+        <h1>TokenSnap - Solana Token Creator</h1>
+        <p>Create Solana SPL tokens easily and securely.</p>
 
         <p id="walletStatus">Wallet not connected</p>
+        
+        <!-- Wallet buttons -->
+        <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Connect Phantom</button>
+        <button class="wallet-btn" onclick="connectWallet('solflare')">🔥 Connect Solflare</button>
 
-        <button class="wallet-btn" onclick="connectWallet()">🔗 Connect Wallet</button>
-
+        <!-- Token Name -->
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
 
+        <!-- Token Symbol -->
         <label for="tokenSymbol">Token Symbol</label>
         <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
 
+        <!-- Total Supply -->
         <label for="supply">Total Supply</label>
         <input type="number" id="supply" placeholder="Enter total supply">
 
-        <button class="action-btn" onclick="createToken()">🎉 Create Token</button>
+        <!-- Create Token Button -->
+        <button class="wallet-btn" onclick="createToken()">Create Token</button>
         <p id="status"></p>
     </div>
 
     <script>
-        let wallet;
-        
-        async function connectWallet() {
+        async function connectWallet(walletType) {
+            let wallet;
+            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+                wallet = window.solana;
+            } else if (walletType === "solflare" && window.solflare) {
+                wallet = window.solflare;
+            } else {
+                alert(`Please install ${walletType} Wallet!`);
+                return;
+            }
+
             try {
-                if (window.solana && window.solana.isPhantom) {
-                    wallet = window.solana;
-                    await wallet.connect();
-                    document.getElementById("walletStatus").innerText = `✅ Connected: ${wallet.publicKey.toString()}`;
-                } else {
-                    alert("Please install Phantom Wallet!");
-                }
-            } catch (error) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
-                console.error(error);
+                await wallet.connect();
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${wallet.publicKey.toString()}`;
+            } catch (err) {
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect";
+                console.error(err);
             }
         }
 
         async function createToken() {
             const tokenName = document.getElementById("tokenName").value;
             const tokenSymbol = document.getElementById("tokenSymbol").value;
-            const supply = document.getElementById("supply").value;
+            const totalSupply = document.getElementById("supply").value;
 
-            if (!wallet || !wallet.publicKey) {
-                alert("Please connect your wallet first.");
+            if (!tokenName || !tokenSymbol || !totalSupply) {
+                alert("Please fill in all fields.");
                 return;
             }
 
-            if (!tokenName || !tokenSymbol || !supply) {
-                alert("Please fill all fields.");
+            if (!window.solana || !window.solana.publicKey) {
+                alert("Please connect a wallet first.");
                 return;
             }
 
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+            const mint = solanaWeb3.Keypair.generate();
+            
             try {
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-                const mint = solanaWeb3.Keypair.generate();
-                const payer = wallet.publicKey;
-                const token = await splToken.createMint(connection, payer, payer, null, 6);
-                
-                document.getElementById("status").innerText = `✅ Token ${tokenName} (${tokenSymbol}) created successfully!`;
+                const tx = new solanaWeb3.Transaction().add(
+                    solanaWeb3.SystemProgram.createAccount({
+                        fromPubkey: window.solana.publicKey,
+                        newAccountPubkey: mint.publicKey,
+                        lamports: await connection.getMinimumBalanceForRentExemption(solanaWeb3.MINT_SIZE),
+                        space: solanaWeb3.MINT_SIZE,
+                        programId: solanaWeb3.TOKEN_PROGRAM_ID,
+                    })
+                );
+
+                await solanaWeb3.sendAndConfirmTransaction(connection, tx, [mint]);
+                document.getElementById("status").innerText = `✅ Token Created: ${mint.publicKey.toString()}`;
             } catch (error) {
-                document.getElementById("status").innerText = "❌ Token creation failed.";
+                document.getElementById("status").innerText = "❌ Error creating token";
                 console.error(error);
             }
         }
