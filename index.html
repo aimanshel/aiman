@@ -3,36 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SolSnap - Token Creator</title>
-
-    <!-- مكتبات Solana -->
+    <title>SolSnap - Solana Token Creator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
-    <script src="https://unpkg.com/@solana/spl-token@latest/dist/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
-
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #0a0f1f;
-            color: #00d1ff;
+            background-color: #121826;
+            color: white;
             padding: 20px;
         }
 
         .container {
-            max-width: 550px;
+            max-width: 450px;
             margin: auto;
-            background: linear-gradient(135deg, #0d162a, #1c2e47);
-            padding: 30px;
+            background: linear-gradient(135deg, #1c2333, #293448);
+            padding: 25px;
             border-radius: 15px;
-            box-shadow: 0px 4px 20px rgba(0, 209, 255, 0.3);
-            border: 1px solid rgba(0, 209, 255, 0.2);
+            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
         }
 
         h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #00d1ff;
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
             margin-bottom: 15px;
         }
 
@@ -40,217 +35,165 @@
             width: 100%;
             padding: 12px;
             margin: 8px 0;
-            border-radius: 10px;
+            border-radius: 8px;
             border: none;
             font-size: 16px;
             outline: none;
             background: rgba(255, 255, 255, 0.1);
-            color: #00d1ff;
-            transition: 0.3s;
-            text-align: center;
+            color: white;
+            transition: 0.2s;
         }
 
         .wallet-btn, .action-btn {
             font-weight: bold;
             cursor: pointer;
-            padding: 14px;
-            border-radius: 12px;
+            transition: 0.3s;
+            padding: 12px;
+            border-radius: 8px;
             font-size: 16px;
             width: 100%;
             border: none;
         }
 
         .wallet-btn {
-            background-color: #0078ff;
-            box-shadow: 0px 4px 15px rgba(0, 120, 255, 0.4);
-            color: white;
+            background-color: #3498db;
+            box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
         }
 
         .wallet-btn:hover {
-            background-color: #0056b3;
+            background-color: #1d6fa5;
         }
 
         .action-btn {
-            background-color: #ff004c;
-            box-shadow: 0px 4px 15px rgba(255, 0, 76, 0.4);
-            color: white;
+            background-color: #e74c3c;
+            box-shadow: 0px 4px 10px rgba(231, 76, 60, 0.4);
         }
 
         .action-btn:hover {
-            background-color: #cc003a;
+            background-color: #c0392b;
         }
 
-        .wallet-selection-container {
-            display: flex;
-            justify-content: space-between;
+        /* Image preview styles */
+        #preview {
+            max-width: 100%;
+            max-height: 200px;
             margin-top: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .wallet-btn {
-            width: 48%;
-        }
-
-        .toggle-container {
+        /* Toggle Switch */
+        .toggle-switch {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 10px 0;
-        }
-
-        .toggle-container label {
-            color: #ffffff;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 25px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #555;
-            transition: 0.4s;
-            border-radius: 25px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 3.5px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #00d1ff;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-
-        .status-message {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
             margin-top: 10px;
+        }
+
+        .toggle-switch label {
             font-size: 14px;
-            color: #ff004c;
         }
 
-        .success-message {
-            color: #00ff87;
+        /* Status Message */
+        .status-message {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #00ff7f;
         }
 
-        #preview {
-            max-width: 100px;
-            margin: 10px auto;
-            display: block;
-            border-radius: 50%;
-            border: 2px solid #00d1ff;
+        .error-message {
+            color: #ff4c4c;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🚀 SolSnap - Token Creator</h1>
-        <p id="walletStatus">🔴 Wallet not connected</p>
+        <h1>🔗 SolSnap - Solana Token Creator</h1>
+        <p>Create your Solana SPL tokens easily and securely.</p>
 
-        <div class="wallet-selection-container">
-            <button class="wallet-btn" onclick="connectWallet('phantom')">Phantom</button>
-            <button class="wallet-btn" onclick="connectWallet('solflare')">Solflare</button>
-        </div>
+        <p id="walletStatus">Wallet not connected</p>
+        
+        <!-- Wallet buttons -->
+        <button class="wallet-btn" onclick="connectWallet()">🔗 Connect Wallet</button>
 
+        <!-- Token Inputs -->
         <label for="tokenName">Token Name</label>
-        <input type="text" id="tokenName">
+        <input type="text" id="tokenName" placeholder="Enter token name">
 
         <label for="tokenSymbol">Token Symbol</label>
-        <input type="text" id="tokenSymbol">
+        <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
+
+        <label for="decimals">Decimals</label>
+        <input type="number" id="decimals" value="6">
+
+        <label for="supply">Total Supply</label>
+        <input type="number" id="supply" placeholder="Enter total supply">
+
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Enter token description"></textarea>
 
         <label for="tokenImage">Upload Token Image</label>
         <input type="file" id="tokenImage" accept="image/*">
         <img id="preview" src="" alt="Image preview">
 
-        <div class="toggle-container">
-            <label>Revoke Freeze Authority</label>
-            <label class="toggle-switch">
-                <input type="checkbox" id="revokeFreeze">
-                <span class="slider"></span>
-            </label>
+        <!-- Toggle Switch -->
+        <div class="toggle-switch">
+            <span>Revoke Freeze Authority</span>
+            <input type="checkbox" id="revokeFreeze" checked>
         </div>
 
-        <button class="action-btn" onclick="validateAndCreateToken()">Create Token</button>
+        <button class="action-btn" onclick="createToken()">Create Token</button>
         <p class="status-message" id="status"></p>
     </div>
 
     <script>
-        let walletAddress = null;
-
-        async function connectWallet(walletType) {
-            let walletProvider = window.solana || window.solflare;
-
-            if (!walletProvider) {
-                alert(`Please install ${walletType} Wallet!`);
-                return;
-            }
-
-            try {
-                const response = await walletProvider.connect();
-                walletAddress = response.publicKey.toString();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${walletAddress}`;
-            } catch (err) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+        async function connectWallet() {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    const response = await window.solana.connect();
+                    document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                } catch (error) {
+                    document.getElementById("walletStatus").innerText = "❌ Wallet connection failed";
+                }
+            } else {
+                alert("Please install Phantom Wallet!");
             }
         }
 
-        document.getElementById("tokenImage").addEventListener("change", function(event) {
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function() {
+                reader.onload = function () {
                     document.getElementById("preview").src = reader.result;
+                    document.getElementById("preview").style.display = "block";
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        function validateAndCreateToken() {
-            if (!walletAddress) {
-                showMessage("❌ Connect your wallet first!", "error");
+        async function createToken() {
+            const tokenName = document.getElementById("tokenName").value;
+            const tokenSymbol = document.getElementById("tokenSymbol").value;
+            const totalSupply = document.getElementById("supply").value;
+            const description = document.getElementById("description").value;
+
+            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+                document.getElementById("status").innerText = "❌ Please fill all fields!";
+                document.getElementById("status").classList.add("error-message");
                 return;
             }
 
-            const tokenName = document.getElementById("tokenName").value.trim();
-            const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
-            const imageInput = document.getElementById("tokenImage");
-
-            if (!tokenName || !tokenSymbol || !imageInput.files.length) {
-                showMessage("⚠️ All fields are required!", "error");
-                return;
-            }
-
-            showMessage("✅ Creating token... Please wait.", "success");
-        }
-
-        function showMessage(msg, type) {
-            const status = document.getElementById("status");
-            status.textContent = msg;
-            status.className = type === "error" ? "status-message" : "success-message";
+            document.getElementById("status").innerText = "🚀 Creating token...";
+            setTimeout(() => {
+                document.getElementById("status").innerText = "✅ Token created successfully!";
+                document.getElementById("status").classList.remove("error-message");
+            }, 2000);
         }
     </script>
 
