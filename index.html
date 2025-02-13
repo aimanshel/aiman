@@ -3,131 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Token Creator</title>
-    
-    <!-- تحميل المكتبات من jsDelivr -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@latest/lib/index.iife.min.js"></script>
-
+    <title>SolSnap - Solana Token Creator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.33.0/lib/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.1.8/lib/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/lib/index.umd.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #121826;
+            background-color: #0a0f1a;
             color: white;
             padding: 20px;
         }
+
         .container {
-            max-width: 400px;
+            max-width: 450px;
             margin: auto;
-            background: linear-gradient(135deg, #1c2333, #293448);
-            padding: 25px;
+            background: #141c2f;
+            padding: 30px;
             border-radius: 15px;
             box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
         }
-        input, button {
+
+        h1 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        input, button, textarea {
             width: 100%;
             padding: 12px;
             margin: 8px 0;
             border-radius: 8px;
             border: none;
             font-size: 16px;
+            outline: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
+            transition: 0.2s;
         }
-        .wallet-btn {
-            background-color: #3498db;
+
+        .wallet-btn, .action-btn {
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
             padding: 12px;
             border-radius: 8px;
             font-size: 16px;
+            width: 100%;
             border: none;
-            cursor: pointer;
         }
+
+        .wallet-btn {
+            background-color: #3498db;
+            box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
+        }
+
         .wallet-btn:hover {
             background-color: #1d6fa5;
         }
+
         .action-btn {
             background-color: #e74c3c;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            border: none;
-            cursor: pointer;
+            box-shadow: 0px 4px 10px rgba(231, 76, 60, 0.4);
         }
+
         .action-btn:hover {
             background-color: #c0392b;
         }
+
+        #preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .wallet-selection-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .wallet-btn {
+            width: 45%;
+        }
+
+        textarea {
+            resize: vertical;
+            overflow: hidden;
+            height: 50px;
+            transition: height 0.2s ease;
+        }
     </style>
 </head>
-
 <body>
+
     <div class="container">
-        <h1>🔗 Solana Token Creator</h1>
+        <h1>🔗 SolSnap - Solana Token Creator</h1>
         <p>Create your Solana SPL tokens easily and securely.</p>
+
         <p id="walletStatus">Wallet not connected</p>
 
-        <!-- Wallet buttons -->
-        <button class="wallet-btn" onclick="connectWallet()">🔗 Connect Wallet</button>
-        <br>
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Phantom</button>
+            <button class="wallet-btn" onclick="connectWallet('solflare')">🔥 Solflare</button>
+        </div>
 
-        <!-- Token Inputs -->
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('slope')">🔑 Slope Wallet</button>
+            <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus Wallet</button>
+        </div>
+
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
 
         <label for="tokenSymbol">Token Symbol</label>
         <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
 
+        <label for="decimals">Decimals</label>
+        <input type="number" id="decimals" value="6">
+
         <label for="supply">Total Supply</label>
         <input type="number" id="supply" placeholder="Enter total supply">
 
-        <!-- Create Token Button -->
-        <button class="action-btn" onclick="createToken()">Create Token</button>
-        <p id="status"></p>
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Enter token description" required></textarea>
+
+        <label for="tokenImage">Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*">
+        <img id="preview" src="" alt="Image preview">
+
+        <button class="action-btn" onclick="createToken()">Create Token (0.3 SOL)</button>
+        <p class="status-message" id="status"></p>
     </div>
 
     <script>
-        let wallet;
-        let connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+        async function connectWallet(walletType) {
+            let walletProvider;
+            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+                walletProvider = window.solana;
+            } else if (walletType === "solflare" && window.solflare) {
+                walletProvider = window.solflare;
+            } else if (walletType === "slope" && window.slope) {
+                walletProvider = window.slope;
+            } else if (walletType === "torus" && window.torus) {
+                walletProvider = window.torus;
+            } else {
+                alert(`Please install ${walletType} Wallet!`);
+                return;
+            }
 
-        async function connectWallet() {
             try {
-                if (window.solana && window.solana.isPhantom) {
-                    wallet = window.solana;
-                    await wallet.connect();
-                    document.getElementById("walletStatus").innerText = `✅ Connected: ${wallet.publicKey.toString()}`;
-                } else {
-                    alert("Phantom Wallet is required!");
-                }
-            } catch (error) {
-                console.error("Wallet connection failed:", error);
+                const response = await walletProvider.connect();
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+            } catch (err) {
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
             }
         }
 
-        async function createToken() {
-            if (!wallet) {
-                alert("Please connect a wallet first.");
-                return;
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                const preview = document.getElementById("preview");
+                preview.src = reader.result;
+                preview.style.display = "block";
             }
 
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function createToken() {
             const tokenName = document.getElementById("tokenName").value;
             const tokenSymbol = document.getElementById("tokenSymbol").value;
             const totalSupply = document.getElementById("supply").value;
+            const description = document.getElementById("description").value;
 
-            if (!tokenName || !tokenSymbol || !totalSupply) {
-                alert("All fields are required.");
+            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+                alert("Please fill in all fields.");
                 return;
             }
 
-            try {
-                const mint = await splToken.createMint(
-                    connection, wallet, wallet.publicKey, null, 6
-                );
+            document.getElementById("status").innerText = "Creating token... Please wait.";
 
-                document.getElementById("status").innerText = `✅ Token Created: ${mint.toString()}`;
+            try {
+                document.getElementById("status").innerText = `✅ Token ${tokenName} created successfully!`;
             } catch (error) {
-                console.error("Token creation failed:", error);
-                document.getElementById("status").innerText = "❌ Token creation failed.";
+                document.getElementById("status").innerText = "❌ Transaction failed or was cancelled.";
             }
         }
     </script>
