@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TokenSnap - Solana Token Creator</title>
-
-    <!-- تحميل مكتبات Solana -->
+    
+    <!-- استدعاء مكتبات Solana -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+    <script src="https://unpkg.com/@solana/spl-token@latest/dist/index.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
 
     <style>
@@ -28,86 +28,116 @@
             box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
         }
 
-        h1 { font-size: 24px; color: #ffffff; margin-bottom: 15px; }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
         input, button {
-            width: 100%; padding: 12px; margin: 8px 0;
-            border-radius: 8px; border: none; font-size: 16px; outline: none;
-            background: rgba(255, 255, 255, 0.1); color: white; transition: 0.2s;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: 0.2s;
         }
-        button {
-            font-weight: bold; cursor: pointer; padding: 12px; border-radius: 8px;
-            transition: 0.3s; background-color: #3498db;
+
+        .wallet-btn {
+            background-color: #3498db;
+            box-shadow: 0px 4px 10px rgba(52, 152, 219, 0.4);
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            border: none;
         }
-        button:hover { background-color: #1d6fa5; }
+
+        .wallet-btn:hover {
+            background-color: #1d6fa5;
+        }
+
+        .status-message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>TokenSnap - Solana Token Creator</h1>
-        <p id="walletStatus">🔌 Wallet not connected</p>
+        <h1>🔗 TokenSnap - Solana Token Creator</h1>
+        <p>Create your Solana SPL tokens easily and securely.</p>
 
-        <button onclick="connectWallet()">🔗 Connect Wallet</button>
-        <button onclick="createToken()">🚀 Create Token</button>
+        <p id="walletStatus">Wallet not connected</p>
+        <button class="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
+        <p class="status-message" id="status"></p>
         
-        <p id="statusMessage"></p>
+        <h2>Create a Token</h2>
+        <input type="text" id="tokenName" placeholder="Enter Token Name">
+        <input type="text" id="tokenSymbol" placeholder="Enter Token Symbol">
+        <input type="number" id="supply" placeholder="Enter Total Supply">
+        <button class="wallet-btn" onclick="createToken()">Create Token</button>
     </div>
 
     <script>
-        let walletProvider;
+        let wallet = null;
 
         async function connectWallet() {
-            console.log("🔗 Attempting to connect to wallet...");
-
             if (window.solana && window.solana.isPhantom) {
-                walletProvider = window.solana;
+                try {
+                    const response = await window.solana.connect();
+                    wallet = response.publicKey.toString();
+                    document.getElementById("walletStatus").innerText = `✅ Connected: ${wallet}`;
+                } catch (error) {
+                    document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+                    console.error("Error connecting wallet: ", error);
+                }
             } else {
-                alert("Phantom Wallet not installed. Please install it first!");
-                return;
-            }
-
-            try {
-                const response = await walletProvider.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
-                console.log("✅ Wallet connected:", response.publicKey.toString());
-            } catch (error) {
-                console.error("❌ Wallet connection failed:", error);
-                document.getElementById("walletStatus").innerText = "❌ Wallet connection failed";
+                alert("Please install Phantom Wallet!");
             }
         }
 
         async function createToken() {
-            if (!walletProvider || !walletProvider.publicKey) {
+            if (!wallet) {
                 alert("Please connect your wallet first!");
                 return;
             }
 
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
-            const payer = walletProvider.publicKey;
-            console.log("🔍 Checking wallet balance...");
+            const tokenName = document.getElementById("tokenName").value;
+            const tokenSymbol = document.getElementById("tokenSymbol").value;
+            const totalSupply = document.getElementById("supply").value;
 
-            const balance = await connection.getBalance(payer);
-            console.log("💰 Wallet balance:", balance / 1e9, "SOL");
-
-            if (balance < 0.3 * 1e9) {
-                alert("❌ Insufficient funds! You need at least 0.3 SOL.");
+            if (!tokenName || !tokenSymbol || !totalSupply) {
+                alert("Please fill in all fields.");
                 return;
             }
 
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
+            const mint = solanaWeb3.Keypair.generate();
+
             try {
-                console.log("🚀 Creating token...");
-                const mint = await splToken.createMint(
+                const createTokenTx = await splToken.createMint(
                     connection,
-                    payer,
-                    payer,
+                    window.solana,
+                    mint.publicKey,
                     null,
-                    6 // 6 decimals
+                    6 // Decimals
                 );
-                document.getElementById("statusMessage").innerText = `✅ Token Created: ${mint.toString()}`;
-                console.log("✅ Token created successfully:", mint.toString());
+
+                document.getElementById("status").innerText = `✅ Token Created Successfully: ${tokenName} (${tokenSymbol})`;
+                console.log("Transaction Signature: ", createTokenTx);
             } catch (error) {
-                console.error("❌ Token creation failed:", error);
-                document.getElementById("statusMessage").innerText = "❌ Token creation failed";
+                document.getElementById("status").innerText = "❌ Transaction failed.";
+                console.error("Token creation error:", error);
             }
         }
     </script>
