@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SolSnap - Solana Token Creator</title>
+    
+    <!-- مكتبات Solana Web3 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #121826;
+            background-color: #0d1b2a;
             color: white;
             padding: 20px;
         }
@@ -25,8 +28,8 @@
         }
 
         h1 {
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 26px;
+            font-weight: 700;
             color: #ffffff;
             margin-bottom: 15px;
         }
@@ -76,14 +79,15 @@
         /* Image preview styles */
         #preview {
             max-width: 100%;
-            max-height: 200px;
-            margin-top: 15px;
+            max-height: 180px;
+            margin-top: 10px;
             display: block;
             margin-left: auto;
             margin-right: auto;
+            border-radius: 8px;
         }
 
-        /* Wallet selection container */
+        /* Wallet selection layout */
         .wallet-selection-container {
             display: flex;
             flex-wrap: wrap;
@@ -96,7 +100,14 @@
             width: 45%;
         }
 
-        /* Toggle switch */
+        textarea {
+            resize: vertical;
+            overflow: hidden;
+            height: 50px;
+            transition: height 0.2s ease;
+        }
+
+        /* Toggle Switch */
         .toggle-switch {
             display: flex;
             align-items: center;
@@ -107,78 +118,107 @@
             margin: 10px 0;
         }
 
-        .toggle-switch input {
-            transform: scale(1.2);
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
         }
 
-        /* Status message */
-        .status-message {
-            font-size: 14px;
-            color: #f1c40f;
-            margin-top: 10px;
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 20px;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🔗 SolSnap - Solana Token Creator</h1>
-        <p>Create your Solana SPL tokens easily and securely.</p>
+        <h1>🚀 SolSnap Token Creator</h1>
+        <p>Create Solana SPL tokens easily and securely.</p>
 
-        <p id="walletStatus">Wallet not connected</p>
+        <p id="walletStatus">🔴 Wallet Not Connected</p>
 
-        <!-- Wallet buttons -->
         <div class="wallet-selection-container">
             <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Phantom</button>
             <button class="wallet-btn" onclick="connectWallet('solflare')">🔥 Solflare</button>
         </div>
 
         <div class="wallet-selection-container">
-            <button class="wallet-btn" onclick="connectWallet('slope')">🔑 Slope Wallet</button>
-            <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus Wallet</button>
+            <button class="wallet-btn" onclick="connectWallet('slope')">🔑 Slope</button>
+            <button class="wallet-btn" onclick="connectWallet('torus')">🌐 Torus</button>
         </div>
 
-        <!-- Token details -->
         <label for="tokenName">Token Name</label>
         <input type="text" id="tokenName" placeholder="Enter token name">
 
         <label for="tokenSymbol">Token Symbol</label>
         <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
 
-        <label for="decimals">Decimals</label>
-        <input type="number" id="decimals" value="6">
-
-        <label for="supply">Total Supply</label>
-        <input type="number" id="supply" placeholder="Enter total supply">
-
         <label for="description">Description</label>
         <textarea id="description" placeholder="Enter token description" required></textarea>
 
-        <!-- Upload Token Image -->
         <label for="tokenImage">Upload Token Image</label>
         <input type="file" id="tokenImage" accept="image/*">
         <img id="preview" src="" alt="Image preview">
 
-        <!-- Toggle switches -->
         <div class="toggle-switch">
             <span>Revoke Freeze Authority</span>
-            <input type="checkbox" id="revokeFreeze" checked>
+            <label class="switch">
+                <input type="checkbox" id="revokeFreeze" checked>
+                <span class="slider"></span>
+            </label>
         </div>
 
         <div class="toggle-switch">
             <span>Revoke Mint Authority</span>
-            <input type="checkbox" id="revokeMint" checked>
+            <label class="switch">
+                <input type="checkbox" id="revokeMint" checked>
+                <span class="slider"></span>
+            </label>
         </div>
 
-        <!-- Create Token Button -->
         <button class="action-btn" onclick="createToken()">Create Token</button>
-        <p class="status-message" id="status"></p>
+        <p id="status"></p>
     </div>
 
     <script>
         async function connectWallet(walletType) {
             let walletProvider;
-            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+            if (walletType === "phantom" && window.solana?.isPhantom) {
                 walletProvider = window.solana;
             } else {
                 alert(`Please install ${walletType} Wallet!`);
@@ -187,37 +227,20 @@
 
             try {
                 const response = await walletProvider.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                document.getElementById("walletStatus").innerText = `🟢 Connected: ${response.publicKey.toString()}`;
             } catch (err) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+                document.getElementById("walletStatus").innerText = "🔴 Failed to connect wallet";
             }
         }
 
         document.getElementById("tokenImage").addEventListener("change", function (event) {
-            const file = event.target.files[0];
             const reader = new FileReader();
-
             reader.onload = function () {
                 document.getElementById("preview").src = reader.result;
-                document.getElementById("preview").style.display = "block";
-            }
-
-            if (file) {
-                reader.readAsDataURL(file);
-            }
+            };
+            reader.readAsDataURL(event.target.files[0]);
         });
 
-        async function createToken() {
-            if (!window.solana || !window.solana.isPhantom) {
-                alert("Please connect to Phantom Wallet!");
-                return;
-            }
-
-            document.getElementById("status").innerText = "Creating token... Please wait.";
-            setTimeout(() => {
-                document.getElementById("status").innerText = "✅ Token created successfully!";
-            }, 2000);
-        }
     </script>
 
 </body>
