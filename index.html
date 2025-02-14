@@ -176,25 +176,50 @@
     </div>
 
     <script>
+        async function connectWallet(walletType) {
+            let walletProvider;
+
+            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+                walletProvider = window.solana;
+            } else if (walletType === "solflare" && window.solflare) {
+                walletProvider = window.solflare;
+            } else if (walletType === "slope" && window.slope) {
+                walletProvider = window.slope;
+            } else if (walletType === "torus" && window.torus) {
+                walletProvider = window.torus;
+            } else {
+                alert(`Please install ${walletType} Wallet!`);
+                return;
+            }
+
+            try {
+                const response = await walletProvider.connect();
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+            } catch (err) {
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+            }
+        }
+
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                document.getElementById("preview").src = reader.result;
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
         function validateAndCreateToken() {
             const tokenName = document.getElementById("tokenName").value.trim();
             const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
             const totalSupply = document.getElementById("supply").value;
-            const description = document.getElementById("description").value.trim();
-            const imageInput = document.getElementById("tokenImage");
 
-            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+            if (!tokenName || !tokenSymbol || !totalSupply) {
                 showMessage("⚠️ All fields are required!", "error");
-                return;
-            }
-
-            if (isNaN(totalSupply) || totalSupply <= 0) {
-                showMessage("⚠️ Total Supply should be a valid positive number!", "error");
-                return;
-            }
-
-            if (!imageInput.files[0]) {
-                showMessage("⚠️ Please upload an image!", "error");
                 return;
             }
 
@@ -206,17 +231,6 @@
             status.textContent = msg;
             status.className = type === "error" ? "status-message" : "success-message";
         }
-
-        document.getElementById("tokenImage").addEventListener("change", function (event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function () {
-                document.getElementById("preview").src = reader.result;
-            }
-            if (file) {
-                reader.readAsDataURL(file);
-            }
-        });
     </script>
 
 </body>
