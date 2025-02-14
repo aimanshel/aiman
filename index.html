@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -46,6 +46,7 @@
             outline: none;
             background: rgba(255, 255, 255, 0.1);
             color: #00d1ff;
+            transition: 0.3s;
             text-align: center;
         }
 
@@ -100,16 +101,17 @@
             color: #ffffff;
         }
 
+        .token-settings {
+            margin-top: 20px;
+        }
+
         .status-message {
             margin-top: 10px;
             font-size: 14px;
-        }
-
-        .error {
             color: #ff004c;
         }
 
-        .success {
+        .success-message {
             color: #00ff87;
         }
 
@@ -140,16 +142,16 @@
 
         <div class="token-settings">
             <label for="tokenName">Token Name</label>
-            <input type="text" id="tokenName">
+            <input type="text" id="tokenName" placeholder="Ex: SolSnapToken">
 
             <label for="tokenSymbol">Token Symbol</label>
-            <input type="text" id="tokenSymbol">
+            <input type="text" id="tokenSymbol" placeholder="Ex: SST">
 
             <label for="decimals">Decimals</label>
             <input type="number" id="decimals" value="6" min="0" max="9">
 
             <label for="supply">Total Supply</label>
-            <input type="number" id="supply" min="1">
+            <input type="number" id="supply" placeholder="Enter total supply" min="1">
 
             <label for="description">Description</label>
             <textarea id="description" placeholder="Enter token description"></textarea>
@@ -161,12 +163,12 @@
 
         <div class="toggle-container">
             <label>Revoke Freeze Authority</label>
-            <input type="checkbox" id="revokeFreeze" checked>
+            <input type="checkbox" id="revokeFreeze">
         </div>
 
         <div class="toggle-container">
             <label>Revoke Mint Authority</label>
-            <input type="checkbox" id="revokeMint" checked>
+            <input type="checkbox" id="revokeMint">
         </div>
 
         <button class="action-btn" onclick="validateAndCreateToken()">Create Token (0.3 SOL)</button>
@@ -174,50 +176,25 @@
     </div>
 
     <script>
-        let wallet = null;
-
-        async function connectWallet(walletType) {
-            let provider;
-            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
-                provider = window.solana;
-            } else if (walletType === "solflare" && window.solflare) {
-                provider = window.solflare;
-            } else if (walletType === "slope" && window.slope) {
-                provider = window.slope;
-            } else if (walletType === "torus" && window.torus) {
-                provider = window.torus;
-            } else {
-                showMessage("❌ Please install the wallet!", "error");
-                return;
-            }
-
-            try {
-                const response = await provider.connect();
-                wallet = response.publicKey.toString();
-                document.getElementById("walletStatus").innerText = `🟢 Connected: ${wallet}`;
-            } catch (err) {
-                showMessage("❌ Failed to connect wallet", "error");
-            }
-        }
-
         function validateAndCreateToken() {
-            if (!wallet) {
-                showMessage("❌ Connect your wallet first!", "error");
-                return;
-            }
-
             const tokenName = document.getElementById("tokenName").value.trim();
             const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
             const totalSupply = document.getElementById("supply").value;
+            const description = document.getElementById("description").value.trim();
             const imageInput = document.getElementById("tokenImage");
 
-            if (!tokenName || !tokenSymbol || !totalSupply) {
-                showMessage("❌ All fields are required!", "error");
+            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+                showMessage("⚠️ All fields are required!", "error");
+                return;
+            }
+
+            if (isNaN(totalSupply) || totalSupply <= 0) {
+                showMessage("⚠️ Total Supply should be a valid positive number!", "error");
                 return;
             }
 
             if (!imageInput.files[0]) {
-                showMessage("❌ Please upload an image!", "error");
+                showMessage("⚠️ Please upload an image!", "error");
                 return;
             }
 
@@ -227,8 +204,19 @@
         function showMessage(msg, type) {
             const status = document.getElementById("status");
             status.textContent = msg;
-            status.className = type;
+            status.className = type === "error" ? "status-message" : "success-message";
         }
+
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function () {
+                document.getElementById("preview").src = reader.result;
+            }
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
     </script>
 
 </body>
