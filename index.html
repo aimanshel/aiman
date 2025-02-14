@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,28 +90,16 @@
             width: 48%;
         }
 
-        .toggle-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .toggle-container label {
-            color: #ffffff;
-        }
-
-        .token-settings {
-            margin-top: 20px;
-        }
-
         .status-message {
             margin-top: 10px;
             font-size: 14px;
+        }
+
+        .error {
             color: #ff004c;
         }
 
-        .success-message {
+        .success {
             color: #00ff87;
         }
 
@@ -132,70 +119,63 @@
         <p id="walletStatus">🔴 Wallet not connected</p>
 
         <div class="wallet-selection-container">
-            <button class="wallet-btn" onclick="connectWallet('phantom')">Phantom</button>
-            <button class="wallet-btn" onclick="connectWallet('solflare')">Solflare</button>
-        </div>
-
-        <div class="wallet-selection-container">
-            <button class="wallet-btn" onclick="connectWallet('slope')">Slope</button>
-            <button class="wallet-btn" onclick="connectWallet('torus')">Torus</button>
+            <button class="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
         </div>
 
         <div class="token-settings">
             <label for="tokenName">Token Name</label>
-            <input type="text" id="tokenName" placeholder="Ex: SolSnapToken">
+            <input type="text" id="tokenName">
 
             <label for="tokenSymbol">Token Symbol</label>
-            <input type="text" id="tokenSymbol" placeholder="Ex: SST">
-
-            <label for="decimals">Decimals</label>
-            <input type="number" id="decimals" value="6" min="0" max="9">
+            <input type="text" id="tokenSymbol">
 
             <label for="supply">Total Supply</label>
-            <input type="number" id="supply" placeholder="Enter total supply" min="1">
-
-            <label for="description">Description</label>
-            <textarea id="description" placeholder="Enter token description"></textarea>
+            <input type="number" id="supply" min="1">
 
             <label for="tokenImage">Upload Token Image</label>
             <input type="file" id="tokenImage" accept="image/*">
             <img id="preview" src="" alt="Image preview">
         </div>
 
-        <div class="toggle-container">
-            <label>Revoke Freeze Authority</label>
-            <input type="checkbox" id="revokeFreeze">
-        </div>
-
-        <div class="toggle-container">
-            <label>Revoke Mint Authority</label>
-            <input type="checkbox" id="revokeMint">
-        </div>
-
-        <button class="action-btn" onclick="validateAndCreateToken()">Create Token (0.3 SOL)</button>
+        <button class="action-btn" onclick="validateAndCreateToken()">Create Token</button>
         <p class="status-message" id="status"></p>
     </div>
 
     <script>
-        function validateAndCreateToken() {
-            const tokenName = document.getElementById("tokenName").value.trim();
-            const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
-            const totalSupply = document.getElementById("supply").value;
-            const description = document.getElementById("description").value.trim();
-            const imageInput = document.getElementById("tokenImage");
+        let wallet = null;
 
-            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
-                showMessage("⚠️ All fields are required!", "error");
+        async function connectWallet() {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    const response = await window.solana.connect();
+                    wallet = response.publicKey.toString();
+                    document.getElementById("walletStatus").innerText = `🟢 Connected: ${wallet}`;
+                } catch (err) {
+                    showMessage("❌ Failed to connect wallet", "error");
+                }
+            } else {
+                showMessage("❌ Please install Phantom Wallet!", "error");
+            }
+        }
+
+        function validateAndCreateToken() {
+            if (!wallet) {
+                showMessage("❌ Connect your wallet first!", "error");
                 return;
             }
 
-            if (isNaN(totalSupply) || totalSupply <= 0) {
-                showMessage("⚠️ Total Supply should be a valid positive number!", "error");
+            const tokenName = document.getElementById("tokenName").value.trim();
+            const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
+            const totalSupply = document.getElementById("supply").value;
+            const imageInput = document.getElementById("tokenImage");
+
+            if (!tokenName || !tokenSymbol || !totalSupply) {
+                showMessage("❌ All fields are required!", "error");
                 return;
             }
 
             if (!imageInput.files[0]) {
-                showMessage("⚠️ Please upload an image!", "error");
+                showMessage("❌ Please upload an image!", "error");
                 return;
             }
 
@@ -205,7 +185,7 @@
         function showMessage(msg, type) {
             const status = document.getElementById("status");
             status.textContent = msg;
-            status.className = type === "error" ? "status-message" : "success-message";
+            status.className = type;
         }
 
         document.getElementById("tokenImage").addEventListener("change", function (event) {
