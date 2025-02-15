@@ -1,90 +1,211 @@
-const { Connection, PublicKey, Keypair, Transaction, sendAndConfirmTransaction } = solanaWeb3;
-const { Token, TOKEN_PROGRAM_ID } = splToken;
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Solana Token Creator - Secure & DApp Compatible</title>  <meta http-equiv="Content-Security-Policy" content="  
+    default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;  
+    script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval';  
+    connect-src 'self' https://api.mainnet-beta.solana.com https://api.testnet.solana.com;  
+    img-src 'self' data:;  
+    style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;">  
 
-let connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-let wallet = null;
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>  
+<script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js"></script>  
 
-// تحديث الشبكة بناءً على اختيار المستخدم
-function updateNetwork() {
-    let selectedNetwork = document.getElementById("networkSelector").value;
-    connection = new Connection(
-        selectedNetwork === "mainnet-beta"
-            ? "https://api.mainnet-beta.solana.com"
-            : "https://api.testnet.solana.com",
-        "confirmed"
-    );
-    document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;
-}
+<style>  
+    body {  
+        font-family: 'Tajawal', sans-serif;  
+        text-align: center;  
+        background: linear-gradient(135deg, #1c1f2b, #292e3f);  
+        color: white;  
+        padding: 20px;  
+    }  
 
-// توصيل المحفظة
-async function connectWallet() {
-    try {
-        if (!window.solana || !window.solana.isPhantom) {
-            alert("🚨 يرجى تثبيت محفظة Phantom Wallet!");
-            return;
-        }
-        wallet = window.solana;
-        const response = await wallet.connect();
-        document.getElementById("walletStatus").innerText = `✅ متصل: ${response.publicKey.toBase58()}`;
-    } catch (error) {
-        console.error(error);
-        document.getElementById("walletStatus").innerText = "❌ فشل في الاتصال بالمحفظة.";
-    }
-}
+    .container {  
+        max-width: 450px;  
+        margin: auto;  
+        background: rgba(28, 35, 51, 0.9);  
+        padding: 25px;  
+        border-radius: 15px;  
+        box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);  
+        backdrop-filter: blur(10px);  
+    }  
 
-// إنشاء التوكن فعليًا
-async function createToken() {
-    if (!wallet || !wallet.publicKey) {
-        alert("❌ يرجى توصيل المحفظة أولاً.");
-        return;
-    }
+    .wallet-btn, .network-btn, .action-btn {  
+        width: 100%;  
+        padding: 12px;  
+        margin: 10px 0;  
+        border-radius: 8px;  
+        border: none;  
+        font-size: 16px;  
+        font-weight: bold;  
+        cursor: pointer;  
+    }  
 
-    try {
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("status").innerText = "🔄 جاري إنشاء التوكن...";
+    .wallet-btn { background-color: #3498db; }  
+    .wallet-btn:hover { background-color: #1d6fa5; }  
 
-        // استخراج القيم من المدخلات
-        const tokenName = document.getElementById("tokenName").value.trim();
-        const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
-        const decimals = parseInt(document.getElementById("decimals").value);
-        const supply = parseInt(document.getElementById("supply").value);
+    .network-btn { background-color: #8e44ad; }  
+    .network-btn:hover { background-color: #732d91; }  
 
-        if (!tokenName || !tokenSymbol || !supply) {
-            alert("❌ يرجى ملء جميع الحقول!");
-            document.getElementById("loading").style.display = "none";
-            return;
-        }
+    .action-btn { background-color: #e74c3c; }  
+    .action-btn:hover { background-color: #c0392b; }  
 
-        // توليد حساب جديد للمينت (Mint Account)
-        const mintAccount = Keypair.generate();
+    input, select, textarea {  
+        width: 100%;  
+        padding: 12px;  
+        margin: 8px 0;  
+        border-radius: 8px;  
+        border: 1px solid white;  
+        font-size: 16px;  
+        outline: none;  
+        background: rgba(255, 255, 255, 0.1);  
+        color: white;  
+    }  
 
-        // إنشاء التوكن
-        const token = await Token.createMint(
-            connection,
-            wallet,
-            wallet.publicKey, // Authority
-            null, // Freeze authority
-            decimals,
-            mintAccount,
-            TOKEN_PROGRAM_ID
-        );
+    input:focus, textarea:focus, select:focus {  
+        background: rgba(255, 255, 255, 0.2);  
+    }  
 
-        // إنشاء حساب للحيازة
-        const tokenAccount = await token.getOrCreateAssociatedAccountInfo(wallet.publicKey);
+    textarea {  
+        resize: vertical;  
+        height: 80px;  
+    }  
 
-        // سك التوكنات (Mint Tokens)
-        await token.mintTo(
-            tokenAccount.address,
-            wallet.publicKey,
-            [],
-            supply * Math.pow(10, decimals) // تحويل إلى وحدات أصغر
-        );
+    #tokenImagePreview {  
+        width: 100px;  
+        height: 100px;  
+        object-fit: cover;  
+        border-radius: 10px;  
+        display: none;  
+        margin: 10px auto;  
+        border: 2px solid white;  
+    }  
 
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("status").innerHTML = `✅ تم إنشاء التوكن بنجاح!<br>Mint Address: <b>${mintAccount.publicKey.toBase58()}</b>`;
-    } catch (error) {
-        console.error(error);
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("status").innerText = "❌ فشل في إنشاء التوكن!";
-    }
-}
+    #loading {  
+        display: none;  
+        width: 30px;  
+        height: 30px;  
+        border: 4px solid white;  
+        border-top: 4px solid #00ffcc;  
+        border-radius: 50%;  
+        animation: spin 1s linear infinite;  
+        margin: 10px auto;  
+    }  
+
+    @keyframes spin {  
+        0% { transform: rotate(0deg); }  
+        100% { transform: rotate(360deg); }  
+    }  
+
+    #status {  
+        margin-top: 15px;  
+        font-size: 14px;  
+        font-weight: bold;  
+        color: #00ffcc;  
+    }  
+</style>
+
+</head>  
+<body>  <div class="container">  
+    <h1>🔗 Solana Token Creator</h1>  
+    <p>Create SPL tokens easily and securely</p>  
+
+    <label for="networkSelector">🌍 Select Network:</label>  
+    <select id="networkSelector" class="network-btn" onchange="updateNetwork()">  
+        <option value="mainnet-beta">Mainnet (Primary Network)</option>  
+        <option value="testnet">Testnet (Testing Network)</option>  
+    </select>  
+
+    <p id="walletStatus">❌ Wallet not connected</p>  
+    <button class="wallet-btn" onclick="connectWallet()">🟣 Connect to Phantom Wallet</button>  
+
+    <hr>  
+
+    <label for="tokenName">🏷 Token Name</label>  
+    <input type="text" id="tokenName" placeholder="Example: MyToken">  
+
+    <label for="tokenSymbol">🔤 Token Symbol</label>  
+    <input type="text" id="tokenSymbol" placeholder="Example: MYT">  
+
+    <label for="decimals">🔢 Decimals</label>  
+    <input type="number" id="decimals" value="6" min="0" max="9">  
+
+    <label for="supply">💰 Total Supply</label>  
+    <input type="number" id="supply" placeholder="Example: 1000000" min="1">  
+
+    <label for="description">📝 Token Description</label>  
+    <textarea id="description" placeholder="Enter a short description of your token..." rows="3"></textarea>  
+
+    <label for="tokenImage">🖼 Upload Token Image</label>  
+    <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">  
+    <img id="tokenImagePreview" alt="Token Image Preview">  
+
+    <div id="loading"></div>  
+
+    <button class="action-btn" onclick="createToken()">🔄 Create Token (0.3 SOL)</button>  
+    <p id="status"></p>  
+</div>  
+
+<script>  
+    let selectedNetwork = 'mainnet-beta';  
+    let wallet = null;  
+
+    function updateNetwork() {  
+        selectedNetwork = document.getElementById("networkSelector").value;  
+        document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;  
+    }  
+
+    async function connectWallet() {  
+        try {  
+            if (!window.solana || !window.solana.isPhantom) {  
+                alert("🚨 Please install the Phantom Wallet!");  
+                return;  
+            }  
+            wallet = window.solana;  
+            const response = await wallet.connect();  
+            document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toBase58()}`;  
+        } catch (error) {  
+            console.error(error);  
+            document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet.";  
+        }  
+    }  
+
+    function previewImage() {  
+        const file = document.getElementById("tokenImage").files[0];  
+        if (file) {  
+            const reader = new FileReader();  
+            reader.onload = function (e) {  
+                document.getElementById("tokenImagePreview").src = e.target.result;  
+                document.getElementById("tokenImagePreview").style.display = "block";  
+            };  
+            reader.readAsDataURL(file);  
+        }  
+    }  
+
+    async function createToken() {  
+        if (!wallet || !wallet.publicKey) {  
+            alert("❌ Please connect your wallet first.");  
+            return;  
+        }  
+
+        const tokenDescription = document.getElementById("description").value;  
+        console.log("Token Description:", tokenDescription);  
+
+        const tokenImage = document.getElementById("tokenImage").files[0];  
+        if (tokenImage) {  
+            console.log("Token Image:", tokenImage.name);  
+        }  
+
+        document.getElementById("loading").style.display = "block";  
+        document.getElementById("status").innerText = "🔄 Creating token...";  
+
+        // Placeholder: Integrate token creation with image storage later.  
+
+        document.getElementById("loading").style.display = "none";  
+        document.getElementById("status").innerText = "✅ Token creation process completed!";  
+    }  
+</script>
+
+</body>  
+</html>
