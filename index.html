@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منشئ رموز Solana - آمن ومتوافق مع DApp</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
+
+    <!-- 🚀 Content Security Policy (CSP) لضمان أمان تحميل المكتبات -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' https://unpkg.com https://cdnjs.cloudflare.com;
+        script-src 'self' https://unpkg.com https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval';
+        connect-src 'self' https://api.mainnet-beta.solana.com https://api.testnet.solana.com;
+        img-src 'self' data:;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;">
+
+    <!-- 🚀 تحميل مكتبات Solana Web3 و SPL Token -->
+    <script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/spl-token@0.3.5/dist/index.iife.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
-    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none';">
+
     <style>
         body { 
             font-family: 'Tajawal', sans-serif;
