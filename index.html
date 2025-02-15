@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منشئ رموز Solana - آمن ومتوافق مع DApp</title>
 
-    <!-- 🚀 Content Security Policy (CSP) لضمان تحميل المكتبات بدون حظر -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval';
@@ -13,17 +12,15 @@
         img-src 'self' data:;
         style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;">
 
-    <!-- 🚀 تحميل مكتبات Solana Web3 و SPL Token -->
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
 
     <style>
-        body { 
+        body {
             font-family: 'Tajawal', sans-serif;
-            text-align: center; 
+            text-align: center;
             background: linear-gradient(135deg, #1c1f2b, #292e3f);
-            color: white; 
+            color: white;
             padding: 20px;
             direction: rtl;
         }
@@ -125,9 +122,6 @@
         <label for="supply">💰 إجمالي العرض</label>
         <input type="number" id="supply" placeholder="مثال: 1000000">
 
-        <label for="description">📝 وصف الرمز</label>
-        <textarea id="description" placeholder="أدخل وصف الرمز"></textarea>
-
         <div id="loading"></div>
 
         <button class="action-btn" onclick="createToken()">🔄 إنشاء الرمز (0.3 SOL)</button>
@@ -136,6 +130,7 @@
 
     <script>
         let selectedNetwork = 'mainnet-beta';
+        let wallet = null;
 
         function updateNetwork() {
             selectedNetwork = document.getElementById("networkSelector").value;
@@ -148,54 +143,49 @@
                     alert("🚨 يرجى تثبيت محفظة Phantom!");
                     return;
                 }
-
-                const response = await window.solana.connect();
+                wallet = window.solana;
+                const response = await wallet.connect();
                 document.getElementById("walletStatus").innerText = `✅ متصل: ${response.publicKey.toBase58()}`;
             } catch (error) {
-                document.getElementById("walletStatus").innerText = "❌ فشل الاتصال بالمحفظة. تأكد من تشغيل Phantom.";
+                console.error(error);
+                document.getElementById("walletStatus").innerText = "❌ فشل الاتصال بالمحفظة.";
             }
         }
 
         async function createToken() {
+            if (!wallet || !wallet.publicKey) {
+                alert("❌ يرجى الاتصال بالمحفظة أولًا.");
+                return;
+            }
+
+            const confirmCreation = confirm("⚠️ سيتم خصم 0.3 SOL لإنشاء الرمز، هل أنت متأكد؟");
+            if (!confirmCreation) return;
+
             document.getElementById("loading").style.display = "block";
             document.getElementById("status").innerText = "🔄 جاري إنشاء الرمز...";
 
             try {
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
-                const wallet = window.solana;
 
-                if (!wallet.publicKey) {
-                    alert("❌ يرجى الاتصال بالمحفظة أولًا.");
-                    return;
-                }
-
-                const mintAccount = await splToken.createMint(
-                    connection,
-                    wallet,
-                    wallet.publicKey,
-                    null,
-                    parseInt(document.getElementById("decimals").value)
+                const mint = new solanaWeb3.Account();
+                const transaction = new solanaWeb3.Transaction().add(
+                    splToken.createMintToInstruction(
+                        mint.publicKey,
+                        parseInt(document.getElementById("decimals").value),
+                        wallet.publicKey,
+                        wallet.publicKey
+                    )
                 );
 
-                const tokenAccount = await splToken.getOrCreateAssociatedTokenAccount(
-                    connection,
-                    wallet,
-                    mintAccount,
-                    wallet.publicKey
-                );
+                transaction.feePayer = wallet.publicKey;
+                transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+                await wallet.signTransaction(transaction);
+                const signature = await connection.sendTransaction(transaction, [mint]);
 
-                await splToken.mintTo(
-                    connection,
-                    wallet,
-                    mintAccount,
-                    tokenAccount.address,
-                    wallet.publicKey,
-                    parseInt(document.getElementById("supply").value) * Math.pow(10, parseInt(document.getElementById("decimals").value))
-                );
-
-                document.getElementById("status").innerText = `✅ تم إنشاء الرمز بنجاح! العنوان: ${mintAccount.toBase58()}`;
+                document.getElementById("status").innerText = `✅ تم إنشاء الرمز بنجاح!`;
             } catch (error) {
-                document.getElementById("status").innerText = "❌ فشل إنشاء الرمز. تأكد من وجود رصيد كافٍ.";
+                console.error(error);
+                document.getElementById("status").innerText = "❌ فشل إنشاء الرمز.";
             }
 
             document.getElementById("loading").style.display = "none";
