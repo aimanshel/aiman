@@ -11,9 +11,9 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background-color: #121826; color: white; padding: 20px; }
         .container { max-width: 400px; margin: auto; background: #1c2333; padding: 25px; border-radius: 15px; box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3); }
-        input, button, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; outline: none; background: rgba(255, 255, 255, 0.1); color: white; }
-        .wallet-btn { background-color: #3498db; font-weight: bold; cursor: pointer; transition: 0.3s; padding: 12px; border-radius: 8px; font-size: 16px; width: 100%; border: none; }
-        .wallet-btn:hover { background-color: #1d6fa5; }
+        input, button, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; outline: none; background: rgba(255, 255, 255, 0.1); color: white; }
+        .wallet-btn, .network-btn { background-color: #3498db; font-weight: bold; cursor: pointer; transition: 0.3s; padding: 12px; border-radius: 8px; font-size: 16px; width: 100%; border: none; }
+        .wallet-btn:hover, .network-btn:hover { background-color: #1d6fa5; }
         .action-btn { background-color: #e74c3c; font-weight: bold; cursor: pointer; transition: 0.3s; padding: 12px; border-radius: 8px; font-size: 16px; width: 100%; border: none; }
         .action-btn:hover { background-color: #c0392b; }
         #preview { max-width: 100%; max-height: 200px; margin-top: 15px; display: none; }
@@ -24,6 +24,13 @@
     <div class="container">
         <h1>🔗 Solana Token Creator</h1>
         <p>إنشاء رموز SPL بسهولة وأمان</p>
+
+        <!-- اختيار الشبكة -->
+        <label>اختر الشبكة:</label>
+        <select id="networkSelector" class="network-btn" onchange="updateNetwork()">
+            <option value="mainnet-beta">🌍 Mainnet (الشبكة الرئيسية)</option>
+            <option value="testnet">🛠 Testnet (الشبكة التجريبية)</option>
+        </select>
 
         <p id="walletStatus">❌ لم يتم الاتصال بالمحفظة</p>
         <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 اتصال بمحفظة Phantom</button>
@@ -52,6 +59,13 @@
     </div>
 
     <script>
+        let selectedNetwork = 'mainnet-beta'; // الشبكة الافتراضية
+
+        function updateNetwork() {
+            selectedNetwork = document.getElementById("networkSelector").value;
+            alert(`✅ تم التبديل إلى ${selectedNetwork}`);
+        }
+
         function sanitizeInput(input) {
             return DOMPurify.sanitize(input);
         }
@@ -78,39 +92,9 @@
             }
         }
 
-        document.getElementById("tokenImage").addEventListener("change", function (event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const allowedTypes = ["image/png", "image/jpeg"];
-            const validExtensions = /\.(png|jpg|jpeg)$/i;
-            
-            if (!allowedTypes.includes(file.type) || !validExtensions.test(file.name)) {
-                alert("❌ يسمح فقط برفع صور PNG أو JPG.");
-                return;
-            }
-
-            if (file.size > 2 * 1024 * 1024) {
-                alert("❌ الحد الأقصى لحجم الصورة هو 2MB.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function () {
-                document.getElementById("preview").src = reader.result;
-                document.getElementById("preview").style.display = "block";
-            };
-            reader.readAsDataURL(file);
-        });
-
         async function createToken() {
-            const expectedOrigin = window.location.origin;
-            if (document.referrer && new URL(document.referrer).origin !== expectedOrigin) {
-                alert("🚨 عملية غير مصرح بها!");
-                return;
-            }
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
 
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
             const wallet = window.solana;
             if (!wallet.publicKey) {
                 alert("❌ يرجى الاتصال بالمحفظة أولًا.");
@@ -121,19 +105,19 @@
             const tokenSymbol = sanitizeInput(document.getElementById("tokenSymbol").value);
             const totalSupply = parseFloat(document.getElementById("supply").value);
             const decimals = parseInt(document.getElementById("decimals").value);
+
             if (!tokenName || !tokenSymbol || isNaN(totalSupply) || totalSupply <= 0 || isNaN(decimals)) {
                 alert("❌ يرجى إدخال جميع الحقول بشكل صحيح.");
                 return;
             }
 
-            const confirmAction = confirm("⚠️ هل أنت متأكد من إنشاء هذا الرمز ودفع الرسوم؟");
+            const confirmAction = confirm(`⚠️ سيتم إنشاء الرمز على شبكة ${selectedNetwork}. هل أنت متأكد؟`);
             if (!confirmAction) return;
 
             document.getElementById("status").innerText = "🔄 جاري إنشاء الرمز...";
 
             try {
                 const mint = solanaWeb3.Keypair.generate();
-
                 const transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
                         fromPubkey: wallet.publicKey,
@@ -147,8 +131,7 @@
                 const signature = await wallet.signAndSendTransaction(transaction);
                 await connection.confirmTransaction(signature, 'confirmed');
 
-                const nonce = Math.floor(Math.random() * 1000000);
-                document.getElementById("status").innerText = `✅ تم إنشاء الرمز بنجاح! (Nonce: ${nonce})`;
+                document.getElementById("status").innerText = `✅ تم إنشاء الرمز على ${selectedNetwork} بنجاح!`;
 
             } catch (error) {
                 console.error("❌ خطأ أثناء إنشاء الرمز:", error);
