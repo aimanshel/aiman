@@ -110,6 +110,8 @@
         <p id="walletStatus">❌ لم يتم الاتصال بالمحفظة</p>
         <button class="wallet-btn" onclick="connectWallet()">🟣 اتصال بمحفظة Phantom</button>
 
+        <hr>
+
         <label for="tokenName">🏷 اسم الرمز</label>
         <input type="text" id="tokenName" placeholder="مثال: MyToken">
 
@@ -117,10 +119,10 @@
         <input type="text" id="tokenSymbol" placeholder="مثال: MYT">
 
         <label for="decimals">🔢 الكسور العشرية</label>
-        <input type="number" id="decimals" value="6">
+        <input type="number" id="decimals" value="6" min="0" max="9">
 
         <label for="supply">💰 إجمالي العرض</label>
-        <input type="number" id="supply" placeholder="مثال: 1000000">
+        <input type="number" id="supply" placeholder="مثال: 1000000" min="1">
 
         <div id="loading"></div>
 
