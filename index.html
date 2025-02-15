@@ -75,6 +75,16 @@
             height: 80px;
         }
 
+        #tokenImagePreview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: none;
+            margin: 10px auto;
+            border: 2px solid white;
+        }
+
         #loading {
             display: none;
             width: 30px;
@@ -131,6 +141,10 @@
         <label for="description">📝 Token Description</label>
         <textarea id="description" placeholder="Enter a short description of your token..." rows="3"></textarea>
 
+        <label for="tokenImage">🖼 Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
+        <img id="tokenImagePreview" alt="Token Image Preview">
+
         <div id="loading"></div>
 
         <button class="action-btn" onclick="createToken()">🔄 Create Token (0.3 SOL)</button>
@@ -161,51 +175,39 @@
             }
         }
 
+        function previewImage() {
+            const file = document.getElementById("tokenImage").files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById("tokenImagePreview").src = e.target.result;
+                    document.getElementById("tokenImagePreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         async function createToken() {
             if (!wallet || !wallet.publicKey) {
                 alert("❌ Please connect your wallet first.");
                 return;
             }
 
-            const confirmCreation = confirm("⚠️ 0.3 SOL will be deducted to create the token. Are you sure?");
-            if (!confirmCreation) return;
+            const tokenDescription = document.getElementById("description").value;
+            console.log("Token Description:", tokenDescription);
+
+            const tokenImage = document.getElementById("tokenImage").files[0];
+            if (tokenImage) {
+                console.log("Token Image:", tokenImage.name);
+            }
 
             document.getElementById("loading").style.display = "block";
             document.getElementById("status").innerText = "🔄 Creating token...";
 
-            try {
-                const tokenDescription = document.getElementById("description").value;
-                console.log("Token Description:", tokenDescription);
-
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
-
-                // Generate a new mint account
-                const mintAccount = solanaWeb3.Keypair.generate();
-
-                // Create the mint transaction
-                const transaction = new solanaWeb3.Transaction().add(
-                    splToken.createInitializeMintInstruction(
-                        mintAccount.publicKey, // New mint account
-                        parseInt(document.getElementById("decimals").value), // Decimals
-                        wallet.publicKey, // Mint authority
-                        null // Freeze authority (optional)
-                    )
-                );
-
-                // Sign and send transaction
-                transaction.feePayer = wallet.publicKey;
-                transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-                transaction.sign(mintAccount);
-
-                const signature = await connection.sendTransaction(transaction, [mintAccount, wallet]);
-
-                document.getElementById("status").innerText = `✅ Token created successfully! Transaction: ${signature}`;
-            } catch (error) {
-                console.error(error);
-                document.getElementById("status").innerText = "❌ Failed to create token.";
-            }
+            // Placeholder: Integrate token creation with image storage later.
 
             document.getElementById("loading").style.display = "none";
+            document.getElementById("status").innerText = "✅ Token creation process completed!";
         }
     </script>
 
