@@ -167,22 +167,27 @@
             try {
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
 
-                const mint = new solanaWeb3.Account();
+                // إنشاء حساب جديد للرمز
+                const mintAccount = solanaWeb3.Keypair.generate();
+
+                // إنشاء معاملة لإنشاء الرمز
                 const transaction = new solanaWeb3.Transaction().add(
-                    splToken.createMintToInstruction(
-                        mint.publicKey,
-                        parseInt(document.getElementById("decimals").value),
-                        wallet.publicKey,
-                        wallet.publicKey
+                    splToken.createInitializeMintInstruction(
+                        mintAccount.publicKey, // حساب الرمز الجديد
+                        parseInt(document.getElementById("decimals").value), // الكسور العشرية
+                        wallet.publicKey, // من يملك الصلاحيات على الرمز
+                        null // Freeze Authority (اختياري)
                     )
                 );
 
+                // توقيع وإرسال المعاملة
                 transaction.feePayer = wallet.publicKey;
                 transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-                await wallet.signTransaction(transaction);
-                const signature = await connection.sendTransaction(transaction, [mint]);
+                transaction.sign(mintAccount);
 
-                document.getElementById("status").innerText = `✅ تم إنشاء الرمز بنجاح!`;
+                const signature = await connection.sendTransaction(transaction, [mintAccount, wallet]);
+
+                document.getElementById("status").innerText = `✅ تم إنشاء الرمز بنجاح! المعاملة: ${signature}`;
             } catch (error) {
                 console.error(error);
                 document.getElementById("status").innerText = "❌ فشل إنشاء الرمز.";
