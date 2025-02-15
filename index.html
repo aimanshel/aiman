@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Token Creator</title>
+    <title>SolSnap - Secure Token Creator</title>
+    
+    <!-- مكتبات Solana -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
     <script src="https://unpkg.com/@solana/spl-token@latest/dist/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-web@0.14.0/dist/umd/solana-wallet-adapter-web.min.js"></script>
@@ -12,117 +14,132 @@
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #121826;
-            color: white;
+            background-color: #0a0f1f;
+            color: #00d1ff;
             padding: 20px;
         }
-
-        .container {
-            max-width: 400px;
-            margin: auto;
-            background: linear-gradient(135deg, #1c2333, #293448);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
-        }
-
-        input, button, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .wallet-btn, .action-btn {
-            font-weight: bold;
-            cursor: pointer;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            width: 100%;
-            border: none;
-        }
-
-        .wallet-btn {
-            background-color: #3498db;
-        }
-
-        .wallet-btn:hover {
-            background-color: #1d6fa5;
-        }
-
-        .action-btn {
-            background-color: #e74c3c;
-        }
-
-        .action-btn:hover {
-            background-color: #c0392b;
-        }
-
-        #preview {
-            max-width: 100%;
-            max-height: 200px;
-            margin-top: 15px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        .container { max-width: 550px; margin: auto; padding: 30px; border-radius: 15px; }
+        .wallet-btn, .action-btn { cursor: pointer; padding: 14px; width: 100%; border: none; }
+        .wallet-selection-container { display: flex; justify-content: space-between; margin-top: 15px; }
+        .wallet-btn { width: 48%; }
+        .status-message { margin-top: 10px; font-size: 14px; color: #ff004c; }
+        .success-message { color: #00ff87; }
+        #preview { max-width: 100px; margin: 10px auto; border-radius: 50%; border: 2px solid #00d1ff; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Solana Token Creator</h1>
-        <p id="walletStatus">Wallet not connected</p>
+        <h1>🚀 SolSnap - Secure Token Creator</h1>
+        <p id="walletStatus">🔴 Wallet not connected</p>
 
-        <button class="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
+        <div class="wallet-selection-container">
+            <button class="wallet-btn" onclick="connectWallet('phantom')">Phantom</button>
+            <button class="wallet-btn" onclick="connectWallet('solflare')">Solflare</button>
+        </div>
 
         <label for="tokenName">Token Name</label>
-        <input type="text" id="tokenName" placeholder="Enter token name">
-
+        <input type="text" id="tokenName">
         <label for="tokenSymbol">Token Symbol</label>
-        <input type="text" id="tokenSymbol" placeholder="Enter token symbol">
-
-        <label for="decimals">Decimals</label>
-        <input type="number" id="decimals" value="6">
-
+        <input type="text" id="tokenSymbol">
         <label for="supply">Total Supply</label>
-        <input type="number" id="supply" placeholder="Enter total supply">
-
+        <input type="number" id="supply" min="1">
+        <label for="description">Description</label>
+        <textarea id="description"></textarea>
         <label for="tokenImage">Upload Token Image</label>
-        <input type="file" id="tokenImage" accept="image/*">
+        <input type="file" id="tokenImage" accept="image/png, image/jpeg">
         <img id="preview" src="" alt="Image preview">
 
-        <button class="action-btn" onclick="createToken()">Create Token</button>
-        <p id="status"></p>
+        <button class="action-btn" onclick="validateAndCreateToken()">Create Token (0.3 SOL)</button>
+        <p class="status-message" id="status"></p>
     </div>
 
     <script>
-        async function connectWallet() {
-            const { solana } = window;
-            if (!solana) {
-                alert("Solana wallet not found! Install Phantom or another wallet.");
+        // 🛡️ منع Clickjacking
+        if (window.top !== window.self) {
+            window.top.location = window.self.location;
+        }
+
+        // 🛡️ وظيفة التأكد من صحة البيانات ومنع XSS
+        function escapeHTML(str) {
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+
+        // 🛡️ التحقق من المحفظة قبل الاتصال بها
+        async function connectWallet(walletType) {
+            let walletProvider;
+            
+            if (walletType === "phantom" && window.solana && window.solana.isPhantom) {
+                walletProvider = window.solana;
+            } else if (walletType === "solflare" && window.solflare) {
+                walletProvider = window.solflare;
+            } else {
+                alert(`⚠️ Please install ${walletType} Wallet!`);
                 return;
             }
 
             try {
-                const response = await solana.connect();
-                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toString()}`;
+                await walletProvider.connect();
+                const publicKey = walletProvider.publicKey.toString();
+                document.getElementById("walletStatus").textContent = `✅ Connected: ${publicKey}`;
             } catch (err) {
-                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet";
+                alert("❌ Failed to connect wallet.");
+                console.error("Error connecting wallet: ", err);
             }
         }
 
-        document.getElementById("tokenImage").addEventListener("change", function (event) {
-            const file = event.target.files[0];
-            if (file.size > 5000000) {
-                alert("File too large! Max 5MB.");
+        // 🛡️ التحقق من صحة البيانات قبل إنشاء التوكن
+        function validateAndCreateToken() {
+            const tokenName = escapeHTML(document.getElementById("tokenName").value.trim());
+            const tokenSymbol = escapeHTML(document.getElementById("tokenSymbol").value.trim());
+            const totalSupply = document.getElementById("supply").value;
+            const description = escapeHTML(document.getElementById("description").value.trim());
+            const imageInput = document.getElementById("tokenImage");
+
+            if (!tokenName || !tokenSymbol || !totalSupply || !description) {
+                showMessage("⚠️ All fields are required!", "error");
                 return;
             }
+
+            if (!imageInput.files[0]) {
+                showMessage("⚠️ Please upload an image!", "error");
+                return;
+            }
+
+            if (!confirm(`⚠️ Are you sure you want to create a new token: ${tokenName} (${tokenSymbol})?`)) {
+                return;
+            }
+
+            showMessage("✅ Creating token... Please wait.", "success");
+        }
+
+        // 🛡️ تأكيد الرسائل الأمنية
+        function showMessage(msg, type) {
+            const status = document.getElementById("status");
+            status.textContent = msg;
+            status.className = type === "error" ? "status-message" : "success-message";
+        }
+
+        // 🛡️ التحقق من الملفات المرفوعة
+        document.getElementById("tokenImage").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            const validTypes = ["image/png", "image/jpeg"];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+
+            if (!validTypes.includes(file.type)) {
+                alert("⚠️ Only PNG and JPEG files are allowed.");
+                return;
+            }
+
+            if (file.size > maxSize) {
+                alert("🚨 File size exceeds 2MB limit!");
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function () {
                 document.getElementById("preview").src = reader.result;
