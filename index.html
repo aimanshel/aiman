@@ -3,20 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Token Creator - Secure & Easy</title>
+    <title>Solana Token Creator - Secure & Modern</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none';">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #121826; color: white; padding: 20px; }
-        .container { max-width: 400px; margin: auto; background: #1c2333; padding: 25px; border-radius: 15px; box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3); }
-        input, button, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; outline: none; background: rgba(255, 255, 255, 0.1); color: white; }
-        .wallet-btn, .network-btn { background-color: #3498db; font-weight: bold; cursor: pointer; transition: 0.3s; padding: 12px; border-radius: 8px; font-size: 16px; width: 100%; border: none; }
-        .wallet-btn:hover, .network-btn:hover { background-color: #1d6fa5; }
-        .action-btn { background-color: #e74c3c; font-weight: bold; cursor: pointer; transition: 0.3s; padding: 12px; border-radius: 8px; font-size: 16px; width: 100%; border: none; }
+        /* General Styles */
+        body { 
+            font-family: 'Poppins', sans-serif;
+            text-align: center; 
+            background: linear-gradient(135deg, #1c1f2b, #292e3f);
+            color: white; 
+            padding: 20px;
+            transition: background 0.3s ease-in-out;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: auto;
+            background: rgba(28, 35, 51, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Buttons */
+        .wallet-btn, .network-btn, .action-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s ease-in-out;
+        }
+
+        .wallet-btn { background-color: #3498db; }
+        .wallet-btn:hover { background-color: #1d6fa5; }
+
+        .network-btn { background-color: #8e44ad; }
+        .network-btn:hover { background-color: #732d91; }
+
+        .action-btn { background-color: #e74c3c; }
         .action-btn:hover { background-color: #c0392b; }
-        #preview { max-width: 100%; max-height: 200px; margin-top: 15px; display: none; }
+
+        /* Inputs */
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Image Preview */
+        #preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            display: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Status Message */
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ffcc;
+        }
     </style>
 </head>
 <body>
@@ -26,31 +95,31 @@
         <p>Create SPL tokens easily and securely</p>
 
         <!-- Network Selection -->
-        <label>Select Network:</label>
+        <label for="networkSelector">🌍 Select Network:</label>
         <select id="networkSelector" class="network-btn" onchange="updateNetwork()">
-            <option value="mainnet-beta">🌍 Mainnet (Live Network)</option>
-            <option value="testnet">🛠 Testnet (Testing Network)</option>
+            <option value="mainnet-beta">Mainnet (Live Network)</option>
+            <option value="testnet">Testnet (Testing Network)</option>
         </select>
 
         <p id="walletStatus">❌ Wallet not connected</p>
-        <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Connect to Phantom Wallet</button>
+        <button class="wallet-btn" onclick="connectWallet('phantom')">🟣 Connect Phantom Wallet</button>
 
-        <label>Token Name</label>
+        <label for="tokenName">🏷 Token Name</label>
         <input type="text" id="tokenName" placeholder="Example: MyToken">
 
-        <label>Token Symbol</label>
+        <label for="tokenSymbol">🔤 Token Symbol</label>
         <input type="text" id="tokenSymbol" placeholder="Example: MYT">
 
-        <label>Decimals</label>
+        <label for="decimals">🔢 Decimals</label>
         <input type="number" id="decimals" value="6">
 
-        <label>Total Supply</label>
+        <label for="supply">💰 Total Supply</label>
         <input type="number" id="supply" placeholder="Example: 1000000">
 
-        <label>Token Description</label>
+        <label for="description">📝 Token Description</label>
         <textarea id="description" placeholder="Enter token description"></textarea>
 
-        <label>Upload Token Image</label>
+        <label for="tokenImage">🖼 Upload Token Image</label>
         <input type="file" id="tokenImage" accept="image/png, image/jpeg">
         <img id="preview" alt="Image Preview">
 
@@ -66,10 +135,6 @@
             alert(`✅ Switched to ${selectedNetwork}. Ensure your wallet has enough SOL for this network.`);
         }
 
-        function sanitizeInput(input) {
-            return DOMPurify.sanitize(input);
-        }
-
         async function connectWallet(walletType) {
             try {
                 let wallet;
@@ -81,13 +146,8 @@
                 }
 
                 const response = await wallet.connect();
-                if (!response.publicKey) {
-                    throw new Error("❌ Failed to retrieve public key.");
-                }
-
                 document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toBase58()}`;
             } catch (error) {
-                console.error("❌ Wallet connection failed:", error);
                 document.getElementById("walletStatus").innerText = "❌ Wallet connection failed. Make sure Phantom Wallet is open.";
             }
         }
@@ -101,31 +161,6 @@
                 return;
             }
 
-            const tokenName = sanitizeInput(document.getElementById("tokenName").value);
-            const tokenSymbol = sanitizeInput(document.getElementById("tokenSymbol").value);
-            const totalSupply = parseFloat(document.getElementById("supply").value);
-            const decimals = parseInt(document.getElementById("decimals").value);
-
-            if (!tokenName) {
-                alert("❌ Token name is required.");
-                return;
-            }
-            if (!tokenSymbol) {
-                alert("❌ Token symbol is required.");
-                return;
-            }
-            if (isNaN(totalSupply) || totalSupply <= 0) {
-                alert("❌ Total supply must be a positive number.");
-                return;
-            }
-            if (isNaN(decimals)) {
-                alert("❌ Decimals must be a valid number.");
-                return;
-            }
-
-            const confirmAction = confirm(`⚠️ You are about to create a token on ${selectedNetwork}. Continue?`);
-            if (!confirmAction) return;
-
             document.getElementById("status").innerText = "🔄 Creating token... Please wait.";
 
             try {
@@ -138,15 +173,12 @@
                     })
                 );
 
-                transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-
                 const signature = await wallet.signAndSendTransaction(transaction);
                 await connection.confirmTransaction(signature, 'confirmed');
 
-                document.getElementById("status").innerText = `✅ Token created successfully on ${selectedNetwork}! Check Solana Explorer.`;
+                document.getElementById("status").innerText = `✅ Token created successfully on ${selectedNetwork}!`;
 
             } catch (error) {
-                console.error("❌ Token creation failed:", error);
                 document.getElementById("status").innerText = "❌ Token creation failed. Ensure your wallet has enough SOL.";
             }
         }
