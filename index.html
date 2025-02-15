@@ -59,7 +59,7 @@
             padding: 12px;
             margin: 8px 0;
             border-radius: 8px;
-            border: none;
+            border: 1px solid white;
             font-size: 16px;
             outline: none;
             background: rgba(255, 255, 255, 0.1);
@@ -68,6 +68,11 @@
 
         input:focus, textarea:focus, select:focus {
             background: rgba(255, 255, 255, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            height: 80px;
         }
 
         #loading {
@@ -123,6 +128,9 @@
         <label for="supply">💰 Total Supply</label>
         <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
+        <label for="description">📝 Token Description</label>
+        <textarea id="description" placeholder="Enter a short description of your token..." rows="3"></textarea>
+
         <div id="loading"></div>
 
         <button class="action-btn" onclick="createToken()">🔄 Create Token (0.3 SOL)</button>
@@ -166,6 +174,9 @@
             document.getElementById("status").innerText = "🔄 Creating token...";
 
             try {
+                const tokenDescription = document.getElementById("description").value;
+                console.log("Token Description:", tokenDescription);
+
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
 
                 // Generate a new mint account
