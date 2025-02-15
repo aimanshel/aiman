@@ -1,211 +1,99 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Solana Token Creator - Secure & DApp Compatible</title>  <meta http-equiv="Content-Security-Policy" content="  
-    default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;  
-    script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval';  
-    connect-src 'self' https://api.mainnet-beta.solana.com https://api.testnet.solana.com;  
-    img-src 'self' data:;  
-    style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;">  
 
-<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>  
-<script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js"></script>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Token Creator - Auto Metadata</title>
+    <script defer src="script.js"></script> <!-- استدعاء ملف JavaScript -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #1c1f2b, #292e3f);
+            color: white;
+            padding: 20px;
+        }
 
-<style>  
-    body {  
-        font-family: 'Tajawal', sans-serif;  
-        text-align: center;  
-        background: linear-gradient(135deg, #1c1f2b, #292e3f);  
-        color: white;  
-        padding: 20px;  
-    }  
+        .container {
+            max-width: 450px;
+            margin: auto;
+            background: rgba(28, 35, 51, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
 
-    .container {  
-        max-width: 450px;  
-        margin: auto;  
-        background: rgba(28, 35, 51, 0.9);  
-        padding: 25px;  
-        border-radius: 15px;  
-        box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);  
-        backdrop-filter: blur(10px);  
-    }  
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid white;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
 
-    .wallet-btn, .network-btn, .action-btn {  
-        width: 100%;  
-        padding: 12px;  
-        margin: 10px 0;  
-        border-radius: 8px;  
-        border: none;  
-        font-size: 16px;  
-        font-weight: bold;  
-        cursor: pointer;  
-    }  
+        input:focus, textarea:focus {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
-    .wallet-btn { background-color: #3498db; }  
-    .wallet-btn:hover { background-color: #1d6fa5; }  
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-    .network-btn { background-color: #8e44ad; }  
-    .network-btn:hover { background-color: #732d91; }  
+        .action-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
 
-    .action-btn { background-color: #e74c3c; }  
-    .action-btn:hover { background-color: #c0392b; }  
+        .action-btn:hover {
+            background-color: #c0392b;
+        }
 
-    input, select, textarea {  
-        width: 100%;  
-        padding: 12px;  
-        margin: 8px 0;  
-        border-radius: 8px;  
-        border: 1px solid white;  
-        font-size: 16px;  
-        outline: none;  
-        background: rgba(255, 255, 255, 0.1);  
-        color: white;  
-    }  
+        #tokenImagePreview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: none;
+            margin: 10px auto;
+            border: 2px solid white;
+        }
 
-    input:focus, textarea:focus, select:focus {  
-        background: rgba(255, 255, 255, 0.2);  
-    }  
+        #uploadStatus {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Solana Token Creator</h1>
+        <p>Create SPL tokens with auto metadata</p>
 
-    textarea {  
-        resize: vertical;  
-        height: 80px;  
-    }  
+        <label for="tokenName">🏷 Token Name</label>
+        <input type="text" id="tokenName" placeholder="Example: MyToken">
 
-    #tokenImagePreview {  
-        width: 100px;  
-        height: 100px;  
-        object-fit: cover;  
-        border-radius: 10px;  
-        display: none;  
-        margin: 10px auto;  
-        border: 2px solid white;  
-    }  
+        <label for="tokenSymbol">🔤 Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="Example: MYT">
 
-    #loading {  
-        display: none;  
-        width: 30px;  
-        height: 30px;  
-        border: 4px solid white;  
-        border-top: 4px solid #00ffcc;  
-        border-radius: 50%;  
-        animation: spin 1s linear infinite;  
-        margin: 10px auto;  
-    }  
+        <label for="tokenImage">🖼 Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*" onchange="uploadToIPFS()">
+        <p id="uploadStatus"></p>
+        <img id="tokenImagePreview" alt="Token Image Preview">
 
-    @keyframes spin {  
-        0% { transform: rotate(0deg); }  
-        100% { transform: rotate(360deg); }  
-    }  
-
-    #status {  
-        margin-top: 15px;  
-        font-size: 14px;  
-        font-weight: bold;  
-        color: #00ffcc;  
-    }  
-</style>
-
-</head>  
-<body>  <div class="container">  
-    <h1>🔗 Solana Token Creator</h1>  
-    <p>Create SPL tokens easily and securely</p>  
-
-    <label for="networkSelector">🌍 Select Network:</label>  
-    <select id="networkSelector" class="network-btn" onchange="updateNetwork()">  
-        <option value="mainnet-beta">Mainnet (Primary Network)</option>  
-        <option value="testnet">Testnet (Testing Network)</option>  
-    </select>  
-
-    <p id="walletStatus">❌ Wallet not connected</p>  
-    <button class="wallet-btn" onclick="connectWallet()">🟣 Connect to Phantom Wallet</button>  
-
-    <hr>  
-
-    <label for="tokenName">🏷 Token Name</label>  
-    <input type="text" id="tokenName" placeholder="Example: MyToken">  
-
-    <label for="tokenSymbol">🔤 Token Symbol</label>  
-    <input type="text" id="tokenSymbol" placeholder="Example: MYT">  
-
-    <label for="decimals">🔢 Decimals</label>  
-    <input type="number" id="decimals" value="6" min="0" max="9">  
-
-    <label for="supply">💰 Total Supply</label>  
-    <input type="number" id="supply" placeholder="Example: 1000000" min="1">  
-
-    <label for="description">📝 Token Description</label>  
-    <textarea id="description" placeholder="Enter a short description of your token..." rows="3"></textarea>  
-
-    <label for="tokenImage">🖼 Upload Token Image</label>  
-    <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">  
-    <img id="tokenImagePreview" alt="Token Image Preview">  
-
-    <div id="loading"></div>  
-
-    <button class="action-btn" onclick="createToken()">🔄 Create Token (0.3 SOL)</button>  
-    <p id="status"></p>  
-</div>  
-
-<script>  
-    let selectedNetwork = 'mainnet-beta';  
-    let wallet = null;  
-
-    function updateNetwork() {  
-        selectedNetwork = document.getElementById("networkSelector").value;  
-        document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;  
-    }  
-
-    async function connectWallet() {  
-        try {  
-            if (!window.solana || !window.solana.isPhantom) {  
-                alert("🚨 Please install the Phantom Wallet!");  
-                return;  
-            }  
-            wallet = window.solana;  
-            const response = await wallet.connect();  
-            document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toBase58()}`;  
-        } catch (error) {  
-            console.error(error);  
-            document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet.";  
-        }  
-    }  
-
-    function previewImage() {  
-        const file = document.getElementById("tokenImage").files[0];  
-        if (file) {  
-            const reader = new FileReader();  
-            reader.onload = function (e) {  
-                document.getElementById("tokenImagePreview").src = e.target.result;  
-                document.getElementById("tokenImagePreview").style.display = "block";  
-            };  
-            reader.readAsDataURL(file);  
-        }  
-    }  
-
-    async function createToken() {  
-        if (!wallet || !wallet.publicKey) {  
-            alert("❌ Please connect your wallet first.");  
-            return;  
-        }  
-
-        const tokenDescription = document.getElementById("description").value;  
-        console.log("Token Description:", tokenDescription);  
-
-        const tokenImage = document.getElementById("tokenImage").files[0];  
-        if (tokenImage) {  
-            console.log("Token Image:", tokenImage.name);  
-        }  
-
-        document.getElementById("loading").style.display = "block";  
-        document.getElementById("status").innerText = "🔄 Creating token...";  
-
-        // Placeholder: Integrate token creation with image storage later.  
-
-        document.getElementById("loading").style.display = "none";  
-        document.getElementById("status").innerText = "✅ Token creation process completed!";  
-    }  
-</script>
-
-</body>  
+        <button class="action-btn" onclick="createToken()">🔄 Create Token (Auto Metadata)</button>
+    </div>
+</body>
 </html>
