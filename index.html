@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منشئ رموز Solana - آمن ومتوافق مع DApp</title>
+    <title>Solana Token Creator - Secure & DApp Compatible</title>
 
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
@@ -22,7 +22,6 @@
             background: linear-gradient(135deg, #1c1f2b, #292e3f);
             color: white;
             padding: 20px;
-            direction: rtl;
         }
 
         .container {
@@ -98,35 +97,35 @@
 <body>
 
     <div class="container">
-        <h1>🔗 منشئ رموز Solana</h1>
-        <p>أنشئ رموز SPL بسهولة وأمان</p>
+        <h1>🔗 Solana Token Creator</h1>
+        <p>Create SPL tokens easily and securely</p>
 
-        <label for="networkSelector">🌍 اختر الشبكة:</label>
+        <label for="networkSelector">🌍 Select Network:</label>
         <select id="networkSelector" class="network-btn" onchange="updateNetwork()">
-            <option value="mainnet-beta">Mainnet (الشبكة الرئيسية)</option>
-            <option value="testnet">Testnet (الشبكة التجريبية)</option>
+            <option value="mainnet-beta">Mainnet (Primary Network)</option>
+            <option value="testnet">Testnet (Testing Network)</option>
         </select>
 
-        <p id="walletStatus">❌ لم يتم الاتصال بالمحفظة</p>
-        <button class="wallet-btn" onclick="connectWallet()">🟣 اتصال بمحفظة Phantom</button>
+        <p id="walletStatus">❌ Wallet not connected</p>
+        <button class="wallet-btn" onclick="connectWallet()">🟣 Connect to Phantom Wallet</button>
 
         <hr>
 
-        <label for="tokenName">🏷 اسم الرمز</label>
-        <input type="text" id="tokenName" placeholder="مثال: MyToken">
+        <label for="tokenName">🏷 Token Name</label>
+        <input type="text" id="tokenName" placeholder="Example: MyToken">
 
-        <label for="tokenSymbol">🔤 رمز العملة</label>
-        <input type="text" id="tokenSymbol" placeholder="مثال: MYT">
+        <label for="tokenSymbol">🔤 Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="Example: MYT">
 
-        <label for="decimals">🔢 الكسور العشرية</label>
+        <label for="decimals">🔢 Decimals</label>
         <input type="number" id="decimals" value="6" min="0" max="9">
 
-        <label for="supply">💰 إجمالي العرض</label>
-        <input type="number" id="supply" placeholder="مثال: 1000000" min="1">
+        <label for="supply">💰 Total Supply</label>
+        <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
         <div id="loading"></div>
 
-        <button class="action-btn" onclick="createToken()">🔄 إنشاء الرمز (0.3 SOL)</button>
+        <button class="action-btn" onclick="createToken()">🔄 Create Token (0.3 SOL)</button>
         <p id="status"></p>
     </div>
 
@@ -136,63 +135,63 @@
 
         function updateNetwork() {
             selectedNetwork = document.getElementById("networkSelector").value;
-            document.getElementById("status").innerText = `✅ تم التبديل إلى ${selectedNetwork}`;
+            document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;
         }
 
         async function connectWallet() {
             try {
                 if (!window.solana || !window.solana.isPhantom) {
-                    alert("🚨 يرجى تثبيت محفظة Phantom!");
+                    alert("🚨 Please install the Phantom Wallet!");
                     return;
                 }
                 wallet = window.solana;
                 const response = await wallet.connect();
-                document.getElementById("walletStatus").innerText = `✅ متصل: ${response.publicKey.toBase58()}`;
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toBase58()}`;
             } catch (error) {
                 console.error(error);
-                document.getElementById("walletStatus").innerText = "❌ فشل الاتصال بالمحفظة.";
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet.";
             }
         }
 
         async function createToken() {
             if (!wallet || !wallet.publicKey) {
-                alert("❌ يرجى الاتصال بالمحفظة أولًا.");
+                alert("❌ Please connect your wallet first.");
                 return;
             }
 
-            const confirmCreation = confirm("⚠️ سيتم خصم 0.3 SOL لإنشاء الرمز، هل أنت متأكد؟");
+            const confirmCreation = confirm("⚠️ 0.3 SOL will be deducted to create the token. Are you sure?");
             if (!confirmCreation) return;
 
             document.getElementById("loading").style.display = "block";
-            document.getElementById("status").innerText = "🔄 جاري إنشاء الرمز...";
+            document.getElementById("status").innerText = "🔄 Creating token...";
 
             try {
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
 
-                // إنشاء حساب جديد للرمز
+                // Generate a new mint account
                 const mintAccount = solanaWeb3.Keypair.generate();
 
-                // إنشاء معاملة لإنشاء الرمز
+                // Create the mint transaction
                 const transaction = new solanaWeb3.Transaction().add(
                     splToken.createInitializeMintInstruction(
-                        mintAccount.publicKey, // حساب الرمز الجديد
-                        parseInt(document.getElementById("decimals").value), // الكسور العشرية
-                        wallet.publicKey, // من يملك الصلاحيات على الرمز
-                        null // Freeze Authority (اختياري)
+                        mintAccount.publicKey, // New mint account
+                        parseInt(document.getElementById("decimals").value), // Decimals
+                        wallet.publicKey, // Mint authority
+                        null // Freeze authority (optional)
                     )
                 );
 
-                // توقيع وإرسال المعاملة
+                // Sign and send transaction
                 transaction.feePayer = wallet.publicKey;
                 transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
                 transaction.sign(mintAccount);
 
                 const signature = await connection.sendTransaction(transaction, [mintAccount, wallet]);
 
-                document.getElementById("status").innerText = `✅ تم إنشاء الرمز بنجاح! المعاملة: ${signature}`;
+                document.getElementById("status").innerText = `✅ Token created successfully! Transaction: ${signature}`;
             } catch (error) {
                 console.error(error);
-                document.getElementById("status").innerText = "❌ فشل إنشاء الرمز.";
+                document.getElementById("status").innerText = "❌ Failed to create token.";
             }
 
             document.getElementById("loading").style.display = "none";
