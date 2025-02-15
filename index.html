@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منشئ رموز Solana - متوافق مع DApp</title>
+    <title>منشئ رموز Solana - آمن ومتوافق مع DApp</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.33.0/solana-web3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/@solana/spl-token/0.1.8/spl-token.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none';">
     <style>
-        /* التصميم العام */
         body { 
             font-family: 'Tajawal', sans-serif;
             text-align: center; 
@@ -17,7 +16,6 @@
             color: white; 
             padding: 20px;
             direction: rtl;
-            transition: background 0.3s ease-in-out;
         }
 
         .container {
@@ -30,7 +28,6 @@
             backdrop-filter: blur(10px);
         }
 
-        /* الأزرار */
         .wallet-btn, .network-btn, .action-btn {
             width: 100%;
             padding: 12px;
@@ -40,7 +37,6 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.3s ease-in-out;
         }
 
         .wallet-btn { background-color: #3498db; }
@@ -52,7 +48,6 @@
         .action-btn { background-color: #e74c3c; }
         .action-btn:hover { background-color: #c0392b; }
 
-        /* المدخلات */
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -63,14 +58,12 @@
             outline: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            transition: 0.3s;
         }
 
         input:focus, textarea:focus, select:focus {
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* عرض الصورة */
         #preview {
             max-width: 100%;
             max-height: 200px;
@@ -80,7 +73,6 @@
             box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
         }
 
-        /* رسالة الحالة */
         #status {
             margin-top: 15px;
             font-size: 14px;
@@ -95,7 +87,6 @@
         <h1>🔗 منشئ رموز Solana</h1>
         <p>أنشئ رموز SPL بسهولة وأمان</p>
 
-        <!-- اختيار الشبكة -->
         <label for="networkSelector">🌍 اختر الشبكة:</label>
         <select id="networkSelector" class="network-btn" onchange="updateNetwork()">
             <option value="mainnet-beta">Mainnet (الشبكة الرئيسية)</option>
@@ -120,16 +111,12 @@
         <label for="description">📝 وصف الرمز</label>
         <textarea id="description" placeholder="أدخل وصف الرمز"></textarea>
 
-        <label for="tokenImage">🖼 تحميل صورة الرمز</label>
-        <input type="file" id="tokenImage" accept="image/png, image/jpeg">
-        <img id="preview" alt="معاينة الصورة">
-
         <button class="action-btn" onclick="createToken()">🔄 إنشاء الرمز (0.3 SOL)</button>
         <p id="status"></p>
     </div>
 
     <script>
-        let selectedNetwork = 'mainnet-beta'; // الشبكة الافتراضية
+        let selectedNetwork = 'mainnet-beta';
 
         function updateNetwork() {
             selectedNetwork = document.getElementById("networkSelector").value;
@@ -143,11 +130,24 @@
                     return;
                 }
 
-                const response = await window.solana.connect();
+                const response = await window.solana.connect({ onlyIfTrusted: true });
                 document.getElementById("walletStatus").innerText = `✅ متصل: ${response.publicKey.toBase58()}`;
             } catch (error) {
                 document.getElementById("walletStatus").innerText = "❌ فشل الاتصال بالمحفظة. تأكد من تشغيل Phantom.";
             }
+        }
+
+        function sanitizeInput(input) {
+            return DOMPurify.sanitize(input.trim());
+        }
+
+        async function checkBalance(wallet, connection) {
+            const balance = await connection.getBalance(wallet.publicKey);
+            if (balance < 0.3 * solanaWeb3.LAMPORTS_PER_SOL) {
+                alert("❌ رصيدك غير كافٍ لإجراء هذه المعاملة.");
+                return false;
+            }
+            return true;
         }
 
         async function createToken() {
@@ -158,6 +158,8 @@
                 alert("❌ يرجى الاتصال بالمحفظة أولًا.");
                 return;
             }
+
+            if (!await checkBalance(wallet, connection)) return;
 
             document.getElementById("status").innerText = "🔄 جاري إنشاء الرمز...";
 
