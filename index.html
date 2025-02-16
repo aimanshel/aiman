@@ -6,40 +6,84 @@
     <title>إنشاء توكن SPL على Solana</title>
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #1e1e2f;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: #292b3a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 255, 200, 0.2);
+        }
+        input, select, button, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        button {
+            background-color: #00aaff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0088cc;
+        }
+        #loading {
+            display: none;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+    </style>
 </head>
 <body>
-    <h1>🔗 Solana Token Creator</h1>
 
-    <label for="networkSelector">🌍 اختر الشبكة:</label>
-    <select id="networkSelector" onchange="updateNetwork()">
-        <option value="mainnet-beta">Mainnet (الشبكة الأساسية)</option>
-        <option value="testnet">Testnet (شبكة الاختبار)</option>
-    </select>
+    <div class="container">
+        <h1>🔗 إنشاء توكن SPL</h1>
 
-    <p id="walletStatus">❌ المحفظة غير متصلة</p>
-    <button onclick="connectWallet()">🟣 الاتصال بمحفظة Phantom</button>
+        <label for="networkSelector">🌍 اختر الشبكة:</label>
+        <select id="networkSelector" onchange="updateNetwork()">
+            <option value="mainnet-beta">Mainnet (الرئيسية)</option>
+            <option value="testnet">Testnet (الاختبارية)</option>
+        </select>
 
-    <hr>
+        <p id="walletStatus">❌ المحفظة غير متصلة</p>
+        <button onclick="connectWallet()">🟣 الاتصال بمحفظة Phantom</button>
 
-    <label for="tokenName">🏷 اسم التوكن</label>
-    <input type="text" id="tokenName" placeholder="مثال: MyToken">
+        <hr>
 
-    <label for="tokenSymbol">🔤 رمز التوكن</label>
-    <input type="text" id="tokenSymbol" placeholder="مثال: MYT">
+        <label for="tokenName">🏷 اسم التوكن</label>
+        <input type="text" id="tokenName" placeholder="مثال: MyToken">
 
-    <label for="decimals">🔢 عدد الكسور العشرية</label>
-    <input type="number" id="decimals" value="6" min="0" max="9">
+        <label for="tokenSymbol">🔤 رمز التوكن</label>
+        <input type="text" id="tokenSymbol" placeholder="مثال: MYT">
 
-    <label for="supply">💰 إجمالي العرض</label>
-    <input type="number" id="supply" placeholder="مثال: 1000000" min="1">
+        <label for="decimals">🔢 عدد الكسور العشرية</label>
+        <input type="number" id="decimals" value="6" min="0" max="9">
 
-    <label for="tokenImage">🖼 تحميل صورة التوكن</label>
-    <input type="file" id="tokenImage" accept="image/*">
+        <label for="supply">💰 إجمالي العرض</label>
+        <input type="number" id="supply" placeholder="مثال: 1000000" min="1">
 
-    <div id="loading" style="display: none;">⏳ جاري المعالجة...</div>
-    
-    <button onclick="createToken()">🔄 إنشاء التوكن</button>
-    <p id="status"></p>
+        <label for="description">📝 وصف التوكن</label>
+        <textarea id="description" placeholder="أدخل وصفًا للتوكن..." rows="3"></textarea>
+
+        <label for="tokenImage">🖼 تحميل صورة التوكن</label>
+        <input type="file" id="tokenImage" accept="image/*">
+        <div id="loading">⏳ جاري إنشاء التوكن...</div>
+
+        <button onclick="createToken()">🔄 إنشاء التوكن</button>
+        <p id="status"></p>
+    </div>
 
     <script>
         let selectedNetwork = 'mainnet-beta';
@@ -95,7 +139,6 @@
                 const decimals = Number(document.getElementById("decimals").value);
                 const totalSupply = BigInt(document.getElementById("supply").value) * BigInt(10 ** decimals);
 
-                // رفع صورة التوكن إلى IPFS
                 const imageFile = document.getElementById("tokenImage").files[0];
                 let imageUrl = "";
                 if (imageFile) {
@@ -103,7 +146,8 @@
                     console.log("🔗 صورة التوكن مرفوعة إلى:", imageUrl);
                 }
 
-                // إنشاء حساب التوكن
+                const tokenDescription = document.getElementById("description").value;
+
                 const lamports = await connection.getMinimumBalanceForRentExemption(solanaWeb3.MintLayout.span);
                 const transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.createAccount({
@@ -124,10 +168,10 @@
 
                 const signature = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [mint]);
 
-                // إنشاء البيانات الوصفية عبر Metaplex
                 const metadata = {
                     name: document.getElementById("tokenName").value,
                     symbol: document.getElementById("tokenSymbol").value,
+                    description: tokenDescription,
                     image: imageUrl,
                     properties: {
                         creators: [{ address: payer.publicKey.toBase58(), share: 100 }]
@@ -146,5 +190,6 @@
             document.getElementById("loading").style.display = "none";
         }
     </script>
+
 </body>
 </html>
