@@ -1,87 +1,99 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء توكن SPL على Solana</title>
+    <title>Solana SPL Token Creator</title>
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             text-align: center;
-            background: #1e1e2f;
+            background: linear-gradient(135deg, #1f1f2b, #292e3f);
             color: white;
             padding: 20px;
         }
         .container {
-            max-width: 400px;
+            max-width: 450px;
             margin: auto;
-            background: #292b3a;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 255, 200, 0.2);
+            background: rgba(28, 35, 51, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
+            backdrop-filter: blur(10px);
         }
         input, select, button, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin: 8px 0;
-            border-radius: 5px;
+            border-radius: 8px;
             border: none;
             font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
         }
         button {
-            background-color: #00aaff;
-            color: white;
+            background-color: #3498db;
             font-weight: bold;
             cursor: pointer;
         }
         button:hover {
-            background-color: #0088cc;
+            background-color: #1d6fa5;
         }
         #loading {
             display: none;
             font-weight: bold;
             color: #00ffcc;
         }
+        #imagePreview {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            margin: 10px auto;
+            display: none;
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🔗 إنشاء توكن SPL</h1>
+        <h1>🔗 Solana SPL Token Creator</h1>
 
-        <label for="networkSelector">🌍 اختر الشبكة:</label>
+        <label for="networkSelector">🌍 Select Network:</label>
         <select id="networkSelector" onchange="updateNetwork()">
-            <option value="mainnet-beta">Mainnet (الرئيسية)</option>
-            <option value="testnet">Testnet (الاختبارية)</option>
+            <option value="mainnet-beta">Mainnet (Primary)</option>
+            <option value="testnet">Testnet (Testing)</option>
         </select>
 
-        <p id="walletStatus">❌ المحفظة غير متصلة</p>
-        <button onclick="connectWallet()">🟣 الاتصال بمحفظة Phantom</button>
+        <p id="walletStatus">❌ Wallet Not Connected</p>
+        <button onclick="connectWallet()">🟣 Connect to Phantom Wallet</button>
 
         <hr>
 
-        <label for="tokenName">🏷 اسم التوكن</label>
-        <input type="text" id="tokenName" placeholder="مثال: MyToken">
+        <label for="tokenName">🏷 Token Name</label>
+        <input type="text" id="tokenName" placeholder="Example: MyToken">
 
-        <label for="tokenSymbol">🔤 رمز التوكن</label>
-        <input type="text" id="tokenSymbol" placeholder="مثال: MYT">
+        <label for="tokenSymbol">🔤 Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="Example: MYT">
 
-        <label for="decimals">🔢 عدد الكسور العشرية</label>
+        <label for="decimals">🔢 Decimals</label>
         <input type="number" id="decimals" value="6" min="0" max="9">
 
-        <label for="supply">💰 إجمالي العرض</label>
-        <input type="number" id="supply" placeholder="مثال: 1000000" min="1">
+        <label for="supply">💰 Total Supply</label>
+        <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
-        <label for="description">📝 وصف التوكن</label>
-        <textarea id="description" placeholder="أدخل وصفًا للتوكن..." rows="3"></textarea>
+        <label for="description">📝 Token Description</label>
+        <textarea id="description" placeholder="Enter a short description..." rows="3"></textarea>
 
-        <label for="tokenImage">🖼 تحميل صورة التوكن</label>
-        <input type="file" id="tokenImage" accept="image/*">
-        <div id="loading">⏳ جاري إنشاء التوكن...</div>
+        <label for="tokenImage">🖼 Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
+        <img id="imagePreview" alt="Token Image Preview">
 
-        <button onclick="createToken()">🔄 إنشاء التوكن</button>
+        <div id="loading">⏳ Creating Token...</div>
+
+        <button onclick="createToken()">🔄 Create Token</button>
         <p id="status"></p>
     </div>
 
@@ -91,22 +103,67 @@
 
         function updateNetwork() {
             selectedNetwork = document.getElementById("networkSelector").value;
-            document.getElementById("status").innerText = `✅ تم التبديل إلى ${selectedNetwork}`;
+            document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;
         }
 
         async function connectWallet() {
             try {
                 if (!window.solana || !window.solana.isPhantom) {
-                    alert("🚨 يرجى تثبيت محفظة Phantom!");
+                    alert("🚨 Please install Phantom Wallet!");
                     return;
                 }
                 wallet = window.solana;
                 const response = await wallet.connect();
-                document.getElementById("walletStatus").innerText = `✅ متصل: ${response.publicKey.toBase58()}`;
+                document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toBase58()}`;
             } catch (error) {
                 console.error(error);
-                document.getElementById("walletStatus").innerText = "❌ فشل الاتصال بالمحفظة.";
+                document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet.";
             }
+        }
+
+        function previewImage() {
+            const file = document.getElementById("tokenImage").files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById("imagePreview").src = e.target.result;
+                    document.getElementById("imagePreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function createToken() {
+            if (!wallet || !wallet.publicKey) {
+                alert("❌ Please connect your wallet first.");
+                return;
+            }
+
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("status").innerText = "🔄 Creating token...";
+
+            try {
+                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
+                const payer = wallet;
+                const mint = new solanaWeb3.Keypair();
+                const decimals = Number(document.getElementById("decimals").value);
+                const totalSupply = BigInt(document.getElementById("supply").value) * BigInt(10 ** decimals);
+
+                const imageFile = document.getElementById("tokenImage").files[0];
+                let imageUrl = "";
+                if (imageFile) {
+                    imageUrl = await uploadImageToIPFS(imageFile);
+                    console.log("🔗 Token image uploaded to:", imageUrl);
+                }
+
+                document.getElementById("status").innerText = `✅ Token created successfully!`;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById("status").innerText = "❌ Token creation failed.";
+            }
+
+            document.getElementById("loading").style.display = "none";
         }
 
         async function uploadImageToIPFS(file) {
@@ -121,73 +178,6 @@
 
             const data = await response.json();
             return `https://ipfs.io/ipfs/${data.value.cid}`;
-        }
-
-        async function createToken() {
-            if (!wallet || !wallet.publicKey) {
-                alert("❌ يرجى توصيل محفظتك أولاً.");
-                return;
-            }
-
-            document.getElementById("loading").style.display = "block";
-            document.getElementById("status").innerText = "🔄 جاري إنشاء التوكن...";
-
-            try {
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
-                const payer = wallet;
-                const mint = new solanaWeb3.Keypair();
-                const decimals = Number(document.getElementById("decimals").value);
-                const totalSupply = BigInt(document.getElementById("supply").value) * BigInt(10 ** decimals);
-
-                const imageFile = document.getElementById("tokenImage").files[0];
-                let imageUrl = "";
-                if (imageFile) {
-                    imageUrl = await uploadImageToIPFS(imageFile);
-                    console.log("🔗 صورة التوكن مرفوعة إلى:", imageUrl);
-                }
-
-                const tokenDescription = document.getElementById("description").value;
-
-                const lamports = await connection.getMinimumBalanceForRentExemption(solanaWeb3.MintLayout.span);
-                const transaction = new solanaWeb3.Transaction().add(
-                    solanaWeb3.SystemProgram.createAccount({
-                        fromPubkey: payer.publicKey,
-                        newAccountPubkey: mint.publicKey,
-                        space: solanaWeb3.MintLayout.span,
-                        lamports,
-                        programId: solanaWeb3.TOKEN_PROGRAM_ID,
-                    }),
-                    solanaSplToken.Token.createInitMintInstruction(
-                        solanaWeb3.TOKEN_PROGRAM_ID,
-                        mint.publicKey,
-                        decimals,
-                        payer.publicKey,
-                        payer.publicKey
-                    )
-                );
-
-                const signature = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [mint]);
-
-                const metadata = {
-                    name: document.getElementById("tokenName").value,
-                    symbol: document.getElementById("tokenSymbol").value,
-                    description: tokenDescription,
-                    image: imageUrl,
-                    properties: {
-                        creators: [{ address: payer.publicKey.toBase58(), share: 100 }]
-                    }
-                };
-
-                const metadataUrl = await uploadImageToIPFS(new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-                console.log("🔗 البيانات الوصفية مرفوعة إلى:", metadataUrl);
-
-                document.getElementById("status").innerText = `✅ تم إنشاء التوكن بنجاح! المعاملة: ${signature}`;
-            } catch (error) {
-                console.error(error);
-                document.getElementById("status").innerText = "❌ فشل إنشاء التوكن.";
-            }
-
-            document.getElementById("loading").style.display = "none";
         }
     </script>
 
