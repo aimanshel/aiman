@@ -46,6 +46,20 @@
             font-weight: bold;
             color: #00ffcc;
         }
+        #imagePreview {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            margin: 10px auto;
+            display: none;
+            border: 2px solid white;
+        }
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -77,15 +91,26 @@
         <label for="supply">💰 Total Supply</label>
         <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
+        <label for="description">📝 Token Description</label>
+        <textarea id="description" placeholder="Enter a short description..." rows="3"></textarea>
+
+        <label for="tokenImage">🖼 Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
+        <img id="imagePreview" alt="Token Image Preview">
+
+        <div class="toggle-container">
+            <label for="revokeFreeze">🚫 Revoke Freeze Authority</label>
+            <input type="checkbox" id="revokeFreeze">
+        </div>
+
+        <div class="toggle-container">
+            <label for="revokeMint">🚫 Revoke Mint Authority</label>
+            <input type="checkbox" id="revokeMint">
+        </div>
+
+        <div id="loading">⏳ Creating Token...</div>
+
         <button onclick="createToken()">🔄 Create Token</button>
-        
-        <hr>
-
-        <h3>⚡ إدارة صلاحيات التوكن</h3>
-
-        <button onclick="revokeFreezeAuthority()">🚫 إلغاء سلطة التجميد</button>
-        <button onclick="revokeMintAuthority()">🚫 إلغاء سلطة الصك</button>
-
         <p id="status"></p>
     </div>
 
@@ -113,68 +138,59 @@
             }
         }
 
-        async function revokeFreezeAuthority() {
-            if (!wallet || !wallet.publicKey) {
-                alert("❌ Please connect your wallet first.");
-                return;
-            }
-
-            document.getElementById("status").innerText = "🔄 Revoking Freeze Authority...";
-
-            try {
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
-                const payer = wallet;
-                const mintAddress = new solanaWeb3.PublicKey(prompt("🔑 Enter token mint address:"));
-
-                const transaction = new solanaWeb3.Transaction().add(
-                    splToken.Token.createSetAuthorityInstruction(
-                        splToken.TOKEN_PROGRAM_ID,
-                        mintAddress,
-                        null, 
-                        "FreezeAuthority",
-                        payer.publicKey,
-                        []
-                    )
-                );
-
-                const signature = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [payer]);
-                document.getElementById("status").innerText = `✅ Freeze Authority Revoked! Hash: ${signature}`;
-            } catch (error) {
-                console.error(error);
-                document.getElementById("status").innerText = "❌ Failed to revoke freeze authority.";
+        function previewImage() {
+            const file = document.getElementById("tokenImage").files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById("imagePreview").src = e.target.result;
+                    document.getElementById("imagePreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
             }
         }
 
-        async function revokeMintAuthority() {
+        async function createToken() {
             if (!wallet || !wallet.publicKey) {
                 alert("❌ Please connect your wallet first.");
                 return;
             }
 
-            document.getElementById("status").innerText = "🔄 Revoking Mint Authority...";
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("status").innerText = "🔄 Creating token...";
 
             try {
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
                 const payer = wallet;
-                const mintAddress = new solanaWeb3.PublicKey(prompt("🔑 Enter token mint address:"));
+                const mint = new solanaWeb3.Keypair();
+                const decimals = Number(document.getElementById("decimals").value);
+                const totalSupply = BigInt(document.getElementById("supply").value) * BigInt(10 ** decimals);
 
-                const transaction = new solanaWeb3.Transaction().add(
-                    splToken.Token.createSetAuthorityInstruction(
-                        splToken.TOKEN_PROGRAM_ID,
-                        mintAddress,
-                        null, 
-                        "MintAuthority",
-                        payer.publicKey,
-                        []
-                    )
+                const token = await splToken.Token.createMint(
+                    connection,
+                    payer,
+                    payer.publicKey,
+                    payer.publicKey,
+                    decimals,
+                    mint
                 );
 
-                const signature = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [payer]);
-                document.getElementById("status").innerText = `✅ Mint Authority Revoked! Hash: ${signature}`;
+                if (document.getElementById("revokeMint").checked) {
+                    await token.setAuthority(token.publicKey, null, "MintTokens", payer.publicKey, []);
+                }
+
+                if (document.getElementById("revokeFreeze").checked) {
+                    await token.setAuthority(token.publicKey, null, "FreezeAccount", payer.publicKey, []);
+                }
+
+                document.getElementById("status").innerText = `✅ Token Created Successfully!`;
+
             } catch (error) {
                 console.error(error);
-                document.getElementById("status").innerText = "❌ Failed to revoke mint authority.";
+                document.getElementById("status").innerText = "❌ Token creation failed.";
             }
+
+            document.getElementById("loading").style.display = "none";
         }
     </script>
 
