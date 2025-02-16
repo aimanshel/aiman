@@ -46,14 +46,6 @@
             font-weight: bold;
             color: #00ffcc;
         }
-        #imagePreview {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
-            margin: 10px auto;
-            display: none;
-            border: 2px solid white;
-        }
     </style>
 </head>
 <body>
@@ -85,16 +77,15 @@
         <label for="supply">💰 Total Supply</label>
         <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
-        <label for="description">📝 Token Description</label>
-        <textarea id="description" placeholder="Enter a short description..." rows="3"></textarea>
-
-        <label for="tokenImage">🖼 Upload Token Image</label>
-        <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
-        <img id="imagePreview" alt="Token Image Preview">
-
-        <div id="loading">⏳ Creating Token...</div>
-
         <button onclick="createToken()">🔄 Create Token</button>
+        
+        <hr>
+
+        <h3>⚡ إدارة صلاحيات التوكن</h3>
+
+        <button onclick="revokeFreezeAuthority()">🚫 إلغاء سلطة التجميد</button>
+        <button onclick="revokeMintAuthority()">🚫 إلغاء سلطة الصك</button>
+
         <p id="status"></p>
     </div>
 
@@ -122,63 +113,68 @@
             }
         }
 
-        function previewImage() {
-            const file = document.getElementById("tokenImage").files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById("imagePreview").src = e.target.result;
-                    document.getElementById("imagePreview").style.display = "block";
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        async function createToken() {
+        async function revokeFreezeAuthority() {
             if (!wallet || !wallet.publicKey) {
                 alert("❌ Please connect your wallet first.");
                 return;
             }
 
-            document.getElementById("loading").style.display = "block";
-            document.getElementById("status").innerText = "🔄 Creating token...";
+            document.getElementById("status").innerText = "🔄 Revoking Freeze Authority...";
 
             try {
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
                 const payer = wallet;
-                const mint = new solanaWeb3.Keypair();
-                const decimals = Number(document.getElementById("decimals").value);
-                const totalSupply = BigInt(document.getElementById("supply").value) * BigInt(10 ** decimals);
+                const mintAddress = new solanaWeb3.PublicKey(prompt("🔑 Enter token mint address:"));
 
-                const imageFile = document.getElementById("tokenImage").files[0];
-                let imageUrl = "";
-                if (imageFile) {
-                    imageUrl = await uploadImageToIPFS(imageFile);
-                    console.log("🔗 Token image uploaded to:", imageUrl);
-                }
+                const transaction = new solanaWeb3.Transaction().add(
+                    splToken.Token.createSetAuthorityInstruction(
+                        splToken.TOKEN_PROGRAM_ID,
+                        mintAddress,
+                        null, 
+                        "FreezeAuthority",
+                        payer.publicKey,
+                        []
+                    )
+                );
 
-                document.getElementById("status").innerText = `✅ Token created successfully!`;
-
+                const signature = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [payer]);
+                document.getElementById("status").innerText = `✅ Freeze Authority Revoked! Hash: ${signature}`;
             } catch (error) {
                 console.error(error);
-                document.getElementById("status").innerText = "❌ Token creation failed.";
+                document.getElementById("status").innerText = "❌ Failed to revoke freeze authority.";
             }
-
-            document.getElementById("loading").style.display = "none";
         }
 
-        async function uploadImageToIPFS(file) {
-            const formData = new FormData();
-            formData.append("file", file);
+        async function revokeMintAuthority() {
+            if (!wallet || !wallet.publicKey) {
+                alert("❌ Please connect your wallet first.");
+                return;
+            }
 
-            const response = await fetch("https://api.nft.storage/upload", {
-                method: "POST",
-                headers: { "Authorization": `Bearer YOUR_NFT_STORAGE_API_KEY` },
-                body: formData
-            });
+            document.getElementById("status").innerText = "🔄 Revoking Mint Authority...";
 
-            const data = await response.json();
-            return `https://ipfs.io/ipfs/${data.value.cid}`;
+            try {
+                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
+                const payer = wallet;
+                const mintAddress = new solanaWeb3.PublicKey(prompt("🔑 Enter token mint address:"));
+
+                const transaction = new solanaWeb3.Transaction().add(
+                    splToken.Token.createSetAuthorityInstruction(
+                        splToken.TOKEN_PROGRAM_ID,
+                        mintAddress,
+                        null, 
+                        "MintAuthority",
+                        payer.publicKey,
+                        []
+                    )
+                );
+
+                const signature = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [payer]);
+                document.getElementById("status").innerText = `✅ Mint Authority Revoked! Hash: ${signature}`;
+            } catch (error) {
+                console.error(error);
+                document.getElementById("status").innerText = "❌ Failed to revoke mint authority.";
+            }
         }
     </script>
 
