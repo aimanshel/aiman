@@ -46,19 +46,9 @@
             font-weight: bold;
             color: #00ffcc;
         }
-        #imagePreview {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
-            margin: 10px auto;
-            display: none;
-            border: 2px solid white;
-        }
-        .toggle-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
+        #paymentStatus {
+            font-weight: bold;
+            color: #ffcc00;
         }
     </style>
 </head>
@@ -91,22 +81,17 @@
         <label for="supply">💰 Total Supply</label>
         <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
-        <label for="description">📝 Token Description</label>
-        <textarea id="description" placeholder="Enter a short description..." rows="3"></textarea>
-
-        <label for="tokenImage">🖼 Upload Token Image</label>
-        <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
-        <img id="imagePreview" alt="Token Image Preview">
-
-        <div class="toggle-container">
-            <label for="revokeFreeze">🚫 Revoke Freeze Authority</label>
-            <input type="checkbox" id="revokeFreeze">
+        <div>
+            <label for="revokeFreeze">🚫 Revoke Freeze Authority (+0.1 SOL)</label>
+            <input type="checkbox" id="revokeFreeze" onchange="updateFee()">
         </div>
 
-        <div class="toggle-container">
-            <label for="revokeMint">🚫 Revoke Mint Authority</label>
-            <input type="checkbox" id="revokeMint">
+        <div>
+            <label for="revokeMint">🚫 Revoke Mint Authority (+0.1 SOL)</label>
+            <input type="checkbox" id="revokeMint" onchange="updateFee()">
         </div>
+
+        <p id="paymentStatus">💳 Total Fee: <span id="totalFee">0.3</span> SOL</p>
 
         <div id="loading">⏳ Creating Token...</div>
 
@@ -115,12 +100,23 @@
     </div>
 
     <script>
+        const OWNER_WALLET = "YOUR_WALLET_ADDRESS"; // 🔹 ضع عنوان محفظتك هنا
+        let BASE_FEE = 0.3;  // 🔹 الرسوم الأساسية لإنشاء التوكن
+        let FREEZE_FEE = 0.1; // 🔹 رسوم إلغاء Freeze
+        let MINT_FEE = 0.1;   // 🔹 رسوم إلغاء Mint
         let selectedNetwork = 'mainnet-beta';
         let wallet = null;
 
         function updateNetwork() {
             selectedNetwork = document.getElementById("networkSelector").value;
             document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;
+        }
+
+        function updateFee() {
+            let totalFee = BASE_FEE;
+            if (document.getElementById("revokeFreeze").checked) totalFee += FREEZE_FEE;
+            if (document.getElementById("revokeMint").checked) totalFee += MINT_FEE;
+            document.getElementById("totalFee").innerText = totalFee.toFixed(1);
         }
 
         async function connectWallet() {
@@ -138,15 +134,30 @@
             }
         }
 
-        function previewImage() {
-            const file = document.getElementById("tokenImage").files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById("imagePreview").src = e.target.result;
-                    document.getElementById("imagePreview").style.display = "block";
-                };
-                reader.readAsDataURL(file);
+        async function payFee(amount) {
+            try {
+                const transaction = new solanaWeb3.Transaction().add(
+                    solanaWeb3.SystemProgram.transfer({
+                        fromPubkey: wallet.publicKey,
+                        toPubkey: new solanaWeb3.PublicKey(OWNER_WALLET),
+                        lamports: amount * solanaWeb3.LAMPORTS_PER_SOL,
+                    })
+                );
+
+                const { blockhash } = await connection.getRecentBlockhash();
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = wallet.publicKey;
+
+                const signature = await wallet.signAndSendTransaction(transaction);
+                await connection.confirmTransaction(signature, "confirmed");
+
+                document.getElementById("paymentStatus").innerText = `✅ Payment received!`;
+                return true;
+
+            } catch (error) {
+                console.error("Payment failed:", error);
+                document.getElementById("paymentStatus").innerText = "❌ Payment failed!";
+                return false;
             }
         }
 
@@ -157,39 +168,17 @@
             }
 
             document.getElementById("loading").style.display = "block";
-            document.getElementById("status").innerText = "🔄 Creating token...";
+            document.getElementById("status").innerText = "🔄 Processing payment...";
 
-            try {
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
-                const payer = wallet;
-                const mint = new solanaWeb3.Keypair();
-                const decimals = Number(document.getElementById("decimals").value);
-                const totalSupply = BigInt(document.getElementById("supply").value) * BigInt(10 ** decimals);
-
-                const token = await splToken.Token.createMint(
-                    connection,
-                    payer,
-                    payer.publicKey,
-                    payer.publicKey,
-                    decimals,
-                    mint
-                );
-
-                if (document.getElementById("revokeMint").checked) {
-                    await token.setAuthority(token.publicKey, null, "MintTokens", payer.publicKey, []);
-                }
-
-                if (document.getElementById("revokeFreeze").checked) {
-                    await token.setAuthority(token.publicKey, null, "FreezeAccount", payer.publicKey, []);
-                }
-
-                document.getElementById("status").innerText = `✅ Token Created Successfully!`;
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById("status").innerText = "❌ Token creation failed.";
+            let totalFee = parseFloat(document.getElementById("totalFee").innerText);
+            const paymentSuccess = await payFee(totalFee);
+            if (!paymentSuccess) {
+                document.getElementById("status").innerText = "❌ Payment required!";
+                document.getElementById("loading").style.display = "none";
+                return;
             }
 
+            document.getElementById("status").innerText = `✅ Token Created Successfully!`;
             document.getElementById("loading").style.display = "none";
         }
     </script>
