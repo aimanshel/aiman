@@ -21,7 +21,6 @@
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0px 4px 20px rgba(80, 122, 255, 0.3);
-            backdrop-filter: blur(10px);
         }
         input, select, button, textarea {
             width: 100%;
@@ -58,15 +57,6 @@
             display: none;
             border: 2px solid white;
         }
-        .option-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 8px;
-        }
     </style>
 </head>
 <body>
@@ -78,7 +68,7 @@
         <select id="networkSelector" onchange="updateNetwork()">
             <option value="mainnet-beta">Mainnet</option>
             <option value="testnet">Testnet</option>
-            <option value="devnet">Devnet</option>
+            <option value="devnet" selected>Devnet</option>
         </select>
 
         <p id="walletStatus">❌ Wallet Not Connected</p>
@@ -105,16 +95,6 @@
         <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
         <img id="imagePreview" alt="Token Image Preview">
 
-        <div class="option-box">
-            <label for="revokeFreeze">🚫 Revoke Freeze Authority (+0.1 SOL)</label>
-            <input type="checkbox" id="revokeFreeze" onchange="updateFee()">
-        </div>
-
-        <div class="option-box">
-            <label for="revokeMint">🚫 Revoke Mint Authority (+0.1 SOL)</label>
-            <input type="checkbox" id="revokeMint" onchange="updateFee()">
-        </div>
-
         <p id="paymentStatus">💳 Total Fee: <span id="totalFee">0.3</span> SOL</p>
 
         <div id="loading">⏳ Creating Token...</div>
@@ -124,22 +104,12 @@
     </div>
 
     <script>
-        let BASE_FEE = 0.3;
-        let FREEZE_FEE = 0.1;
-        let MINT_FEE = 0.1;
-        let selectedNetwork = 'mainnet-beta';
+        let selectedNetwork = 'devnet';
         let wallet = null;
 
         function updateNetwork() {
             selectedNetwork = document.getElementById("networkSelector").value;
             document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;
-        }
-
-        function updateFee() {
-            let totalFee = BASE_FEE;
-            if (document.getElementById("revokeFreeze").checked) totalFee += FREEZE_FEE;
-            if (document.getElementById("revokeMint").checked) totalFee += MINT_FEE;
-            document.getElementById("totalFee").innerText = totalFee.toFixed(1);
         }
 
         async function connectWallet() {
@@ -174,21 +144,24 @@
                 return;
             }
 
-            const fields = ["tokenName", "tokenSymbol", "decimals", "supply", "description"];
-            for (const field of fields) {
-                if (!document.getElementById(field).value.trim()) {
-                    alert(`❌ Please fill in the ${field.replace(/([A-Z])/g, ' $1').trim()} field.`);
-                    return;
-                }
-            }
-
             document.getElementById("loading").style.display = "block";
             document.getElementById("status").innerText = "🔄 Processing...";
 
-            setTimeout(() => {
-                document.getElementById("status").innerText = "✅ Token Creation Completed!";
-                document.getElementById("loading").style.display = "none";
-            }, 2000);
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), "confirmed");
+            const payer = wallet.publicKey;
+            const mint = solanaWeb3.Keypair.generate();
+            const token = await splToken.Token.createMint(
+                connection,
+                payer,
+                mint.publicKey,
+                payer,
+                parseInt(document.getElementById("decimals").value),
+                splToken.TOKEN_PROGRAM_ID
+            );
+
+            alert(`✅ Token Created! Address: ${token.publicKey.toBase58()}`);
+            document.getElementById("status").innerText = `✅ Token Created Successfully!`;
+            document.getElementById("loading").style.display = "none";
         }
     </script>
 
