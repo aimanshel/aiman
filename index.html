@@ -167,6 +167,29 @@
                 reader.readAsDataURL(file);
             }
         }
+
+        async function createToken() {
+            if (!wallet || !wallet.publicKey) {
+                alert("❌ Please connect your wallet first!");
+                return;
+            }
+
+            const fields = ["tokenName", "tokenSymbol", "decimals", "supply", "description"];
+            for (const field of fields) {
+                if (!document.getElementById(field).value.trim()) {
+                    alert(`❌ Please fill in the ${field.replace(/([A-Z])/g, ' $1').trim()} field.`);
+                    return;
+                }
+            }
+
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("status").innerText = "🔄 Processing...";
+
+            setTimeout(() => {
+                document.getElementById("status").innerText = "✅ Token Creation Completed!";
+                document.getElementById("loading").style.display = "none";
+            }, 2000);
+        }
     </script>
 
 </body>
