@@ -115,7 +115,7 @@
     </div>
 
     <script>
-        const OWNER_WALLET = "YOUR_WALLET_ADDRESS"; // ضع عنوان محفظتك هنا
+        const OWNER_WALLET = "YOUR_WALLET_ADDRESS"; // استبدل بعنوان محفظتك الخاصة
         let BASE_FEE = 0.3;
         let FREEZE_FEE = 0.1;
         let MINT_FEE = 0.1;
@@ -167,10 +167,18 @@
                 return;
             }
 
+            const fields = ["tokenName", "tokenSymbol", "decimals", "supply", "description"];
+            for (const field of fields) {
+                if (!document.getElementById(field).value.trim()) {
+                    alert(`❌ Please fill in the ${field.replace(/([A-Z])/g, ' $1').trim()} field.`);
+                    return;
+                }
+            }
+
             document.getElementById("loading").style.display = "block";
+            document.getElementById("status").innerText = "🔄 Processing payment...";
 
             let totalFee = parseFloat(document.getElementById("totalFee").innerText);
-            // هنا سيتم تنفيذ الدفع تلقائيًا قبل إنشاء التوكن
             document.getElementById("status").innerText = `✅ Payment received! Processing Token Creation...`;
 
             document.getElementById("status").innerText = `✅ Token Created Successfully!`;
