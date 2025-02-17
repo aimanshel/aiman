@@ -67,9 +67,9 @@
 
         <label for="networkSelector">🌍 Select Network:</label>
         <select id="networkSelector" onchange="updateNetwork()">
-            <option value="mainnet-beta">Mainnet (Primary)</option>
-            <option value="testnet">Testnet (Testing)</option>
-            <option value="devnet">Devnet (Development)</option>
+            <option value="mainnet-beta">Mainnet</option>
+            <option value="testnet">Testnet</option>
+            <option value="devnet">Devnet</option>
         </select>
 
         <p id="walletStatus">❌ Wallet Not Connected</p>
@@ -78,16 +78,16 @@
         <hr>
 
         <label for="tokenName">🏷 Token Name</label>
-        <input type="text" id="tokenName" placeholder="Example: MyToken">
+        <input type="text" id="tokenName" placeholder="MyToken">
 
         <label for="tokenSymbol">🔤 Token Symbol</label>
-        <input type="text" id="tokenSymbol" placeholder="Example: MYT">
+        <input type="text" id="tokenSymbol" placeholder="MYT">
 
         <label for="decimals">🔢 Decimals</label>
         <input type="number" id="decimals" value="6" min="0" max="9">
 
         <label for="supply">💰 Total Supply</label>
-        <input type="number" id="supply" placeholder="Example: 1000000" min="1">
+        <input type="number" id="supply" placeholder="1000000" min="1">
 
         <label for="description">📝 Token Description</label>
         <textarea id="description" placeholder="Enter a short description..." rows="3"></textarea>
@@ -95,16 +95,6 @@
         <label for="tokenImage">🖼 Upload Token Image</label>
         <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
         <img id="imagePreview" alt="Token Image Preview">
-
-        <div>
-            <label for="revokeFreeze">🚫 Revoke Freeze Authority (+0.1 SOL)</label>
-            <input type="checkbox" id="revokeFreeze" onchange="updateFee()">
-        </div>
-
-        <div>
-            <label for="revokeMint">🚫 Revoke Mint Authority (+0.1 SOL)</label>
-            <input type="checkbox" id="revokeMint" onchange="updateFee()">
-        </div>
 
         <p id="paymentStatus">💳 Total Fee: <span id="totalFee">0.3</span> SOL</p>
 
@@ -115,10 +105,6 @@
     </div>
 
     <script>
-        const OWNER_WALLET = "YOUR_WALLET_ADDRESS"; // استبدل بعنوان محفظتك الخاصة
-        let BASE_FEE = 0.3;
-        let FREEZE_FEE = 0.1;
-        let MINT_FEE = 0.1;
         let selectedNetwork = 'mainnet-beta';
         let wallet = null;
 
@@ -127,24 +113,16 @@
             document.getElementById("status").innerText = `✅ Switched to ${selectedNetwork}`;
         }
 
-        function updateFee() {
-            let totalFee = BASE_FEE;
-            if (document.getElementById("revokeFreeze").checked) totalFee += FREEZE_FEE;
-            if (document.getElementById("revokeMint").checked) totalFee += MINT_FEE;
-            document.getElementById("totalFee").innerText = totalFee.toFixed(1);
-        }
-
         async function connectWallet() {
+            if (!window.solana || !window.solana.isPhantom) {
+                alert("🚨 Please install Phantom Wallet!");
+                return;
+            }
             try {
-                if (!window.solana || !window.solana.isPhantom) {
-                    alert("🚨 Please install Phantom Wallet!");
-                    return;
-                }
                 wallet = window.solana;
                 const response = await wallet.connect();
                 document.getElementById("walletStatus").innerText = `✅ Connected: ${response.publicKey.toBase58()}`;
             } catch (error) {
-                console.error(error);
                 document.getElementById("walletStatus").innerText = "❌ Failed to connect wallet.";
             }
         }
@@ -167,22 +145,51 @@
                 return;
             }
 
-            const fields = ["tokenName", "tokenSymbol", "decimals", "supply", "description"];
-            for (const field of fields) {
-                if (!document.getElementById(field).value.trim()) {
-                    alert(`❌ Please fill in the ${field.replace(/([A-Z])/g, ' $1').trim()} field.`);
-                    return;
-                }
+            const tokenName = document.getElementById("tokenName").value.trim();
+            const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
+            const decimals = parseInt(document.getElementById("decimals").value);
+            const totalSupply = parseInt(document.getElementById("supply").value);
+
+            if (!tokenName || !tokenSymbol || !totalSupply) {
+                alert("❌ Please fill in all required fields!");
+                return;
             }
 
             document.getElementById("loading").style.display = "block";
-            document.getElementById("status").innerText = "🔄 Processing payment...";
+            document.getElementById("status").innerText = "🔄 Processing...";
 
-            let totalFee = parseFloat(document.getElementById("totalFee").innerText);
-            document.getElementById("status").innerText = `✅ Payment received! Processing Token Creation...`;
+            try {
+                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(selectedNetwork), 'confirmed');
+                const payer = wallet.publicKey;
+                const mint = solanaWeb3.Keypair.generate();
+                const lamports = await solanaWeb3.Token.getMinBalanceRentForExemptMint(connection);
 
-            document.getElementById("status").innerText = `✅ Token Created Successfully!`;
-            document.getElementById("loading").style.display = "none";
+                const transaction = new solanaWeb3.Transaction().add(
+                    solanaWeb3.SystemProgram.createAccount({
+                        fromPubkey: payer,
+                        newAccountPubkey: mint.publicKey,
+                        space: solanaWeb3.Token.MINT_SIZE,
+                        lamports: lamports,
+                        programId: solanaWeb3.TOKEN_PROGRAM_ID,
+                    }),
+                    solanaWeb3.Token.createInitMintInstruction(
+                        solanaWeb3.TOKEN_PROGRAM_ID,
+                        mint.publicKey,
+                        decimals,
+                        payer,
+                        payer
+                    )
+                );
+
+                const signature = await wallet.signAndSendTransaction(transaction);
+                await connection.confirmTransaction(signature);
+
+                document.getElementById("status").innerHTML = `✅ Token Created! 🆔 <a href="https://solscan.io/token/${mint.publicKey}" target="_blank">${mint.publicKey}</a>`;
+            } catch (error) {
+                document.getElementById("status").innerText = "❌ Token creation failed!";
+            } finally {
+                document.getElementById("loading").style.display = "none";
+            }
         }
     </script>
 
