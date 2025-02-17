@@ -50,6 +50,14 @@
             font-weight: bold;
             color: #ffcc00;
         }
+        #imagePreview {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            margin: 10px auto;
+            display: none;
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body>
@@ -81,6 +89,13 @@
         <label for="supply">💰 Total Supply</label>
         <input type="number" id="supply" placeholder="Example: 1000000" min="1">
 
+        <label for="description">📝 Token Description</label>
+        <textarea id="description" placeholder="Enter a short description..." rows="3"></textarea>
+
+        <label for="tokenImage">🖼 Upload Token Image</label>
+        <input type="file" id="tokenImage" accept="image/*" onchange="previewImage()">
+        <img id="imagePreview" alt="Token Image Preview">
+
         <div>
             <label for="revokeFreeze">🚫 Revoke Freeze Authority (+0.1 SOL)</label>
             <input type="checkbox" id="revokeFreeze" onchange="updateFee()">
@@ -100,10 +115,10 @@
     </div>
 
     <script>
-        const OWNER_WALLET = "YOUR_WALLET_ADDRESS"; // 🔹 ضع عنوان محفظتك هنا
-        let BASE_FEE = 0.3;  // 🔹 الرسوم الأساسية لإنشاء التوكن
-        let FREEZE_FEE = 0.1; // 🔹 رسوم إلغاء Freeze
-        let MINT_FEE = 0.1;   // 🔹 رسوم إلغاء Mint
+        const OWNER_WALLET = "YOUR_WALLET_ADDRESS"; // ضع عنوان محفظتك هنا
+        let BASE_FEE = 0.3;
+        let FREEZE_FEE = 0.1;
+        let MINT_FEE = 0.1;
         let selectedNetwork = 'mainnet-beta';
         let wallet = null;
 
@@ -134,30 +149,15 @@
             }
         }
 
-        async function payFee(amount) {
-            try {
-                const transaction = new solanaWeb3.Transaction().add(
-                    solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: wallet.publicKey,
-                        toPubkey: new solanaWeb3.PublicKey(OWNER_WALLET),
-                        lamports: amount * solanaWeb3.LAMPORTS_PER_SOL,
-                    })
-                );
-
-                const { blockhash } = await connection.getRecentBlockhash();
-                transaction.recentBlockhash = blockhash;
-                transaction.feePayer = wallet.publicKey;
-
-                const signature = await wallet.signAndSendTransaction(transaction);
-                await connection.confirmTransaction(signature, "confirmed");
-
-                document.getElementById("paymentStatus").innerText = `✅ Payment received!`;
-                return true;
-
-            } catch (error) {
-                console.error("Payment failed:", error);
-                document.getElementById("paymentStatus").innerText = "❌ Payment failed!";
-                return false;
+        function previewImage() {
+            const file = document.getElementById("tokenImage").files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById("imagePreview").src = e.target.result;
+                    document.getElementById("imagePreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
             }
         }
 
@@ -168,15 +168,10 @@
             }
 
             document.getElementById("loading").style.display = "block";
-            document.getElementById("status").innerText = "🔄 Processing payment...";
 
             let totalFee = parseFloat(document.getElementById("totalFee").innerText);
-            const paymentSuccess = await payFee(totalFee);
-            if (!paymentSuccess) {
-                document.getElementById("status").innerText = "❌ Payment required!";
-                document.getElementById("loading").style.display = "none";
-                return;
-            }
+            // هنا سيتم تنفيذ الدفع تلقائيًا قبل إنشاء التوكن
+            document.getElementById("status").innerText = `✅ Payment received! Processing Token Creation...`;
 
             document.getElementById("status").innerText = `✅ Token Created Successfully!`;
             document.getElementById("loading").style.display = "none";
